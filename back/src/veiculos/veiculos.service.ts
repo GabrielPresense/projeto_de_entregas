@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Veiculo } from './veiculo.entity';
+import { Entregador } from '../entregadores/entregador.entity';
 import { CreateVeiculoDto } from './dto/create-veiculo.dto';
 import { UpdateVeiculoDto } from './dto/update-veiculo.dto';
 
@@ -10,6 +11,8 @@ export class VeiculosService {
   constructor(
     @InjectRepository(Veiculo)
     private readonly veiculoRepo: Repository<Veiculo>,
+    @InjectRepository(Entregador)
+    private readonly entregadorRepo: Repository<Entregador>,
   ) {}
 
   async create(data: CreateVeiculoDto): Promise<Veiculo> {
@@ -26,7 +29,7 @@ export class VeiculosService {
 
   async findAll(): Promise<Veiculo[]> {
     return this.veiculoRepo.find({
-      relations: ['rotas'],
+      relations: ['rotas', 'entregadores'],
       order: { id: 'DESC' },
     });
   }
@@ -34,7 +37,7 @@ export class VeiculosService {
   async findOne(id: number): Promise<Veiculo> {
     const veiculo = await this.veiculoRepo.findOne({
       where: { id },
-      relations: ['rotas'],
+      relations: ['rotas', 'entregadores'],
     });
     if (!veiculo) throw new NotFoundException('Veículo não encontrado');
     return veiculo;
@@ -56,8 +59,40 @@ export class VeiculosService {
   async findDisponiveis(): Promise<Veiculo[]> {
     return this.veiculoRepo.find({
       where: { disponivel: true },
+      relations: ['entregadores'],
       order: { id: 'DESC' },
     });
+  }
+
+  async adicionarEntregador(
+    veiculoId: number,
+    entregadorId: number,
+  ): Promise<Veiculo> {
+    const veiculo = await this.findOne(veiculoId);
+    const entregador = await this.entregadorRepo.findOne({
+      where: { id: entregadorId },
+    });
+    if (!entregador) throw new NotFoundException('Entregador não encontrado');
+
+    if (!veiculo.entregadores) veiculo.entregadores = [];
+    if (!veiculo.entregadores.find((e) => e.id === entregadorId)) {
+      veiculo.entregadores.push(entregador);
+      await this.veiculoRepo.save(veiculo);
+    }
+
+    return this.findOne(veiculoId);
+  }
+
+  async removerEntregador(
+    veiculoId: number,
+    entregadorId: number,
+  ): Promise<Veiculo> {
+    const veiculo = await this.findOne(veiculoId);
+    veiculo.entregadores = veiculo.entregadores?.filter(
+      (e) => e.id !== entregadorId,
+    ) || [];
+    await this.veiculoRepo.save(veiculo);
+    return this.findOne(veiculoId);
   }
 }
 

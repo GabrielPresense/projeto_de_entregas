@@ -1,4 +1,4 @@
-import { IsDecimal, IsEnum, IsInt, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsDecimal, IsEnum, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { StatusRota } from '../rota.entity';
 
 export class CreateRotaDto {
@@ -10,8 +10,8 @@ export class CreateRotaDto {
   @IsNotEmpty()
   descricao!: string;
 
+  @IsOptional()
   @IsEnum(StatusRota)
-  @IsNotEmpty()
   status?: StatusRota;
 
   @IsDecimal()

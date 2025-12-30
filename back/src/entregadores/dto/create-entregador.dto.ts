@@ -1,4 +1,4 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { StatusEntregador } from '../entregador.entity';
 
 export class CreateEntregadorDto {
@@ -18,6 +18,7 @@ export class CreateEntregadorDto {
   @IsNotEmpty()
   email!: string;
 
+  @IsOptional()
   @IsEnum(StatusEntregador)
   status?: StatusEntregador;
 }
