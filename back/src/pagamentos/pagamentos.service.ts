@@ -80,11 +80,15 @@ export class PagamentosService {
 
     // Simulação de processamento de pagamento
     // Aqui você integraria com um gateway de pagamento real
-    setTimeout(async () => {
+    const timer = setTimeout(async () => {
       pagamento.status = StatusPagamento.APROVADO;
       pagamento.processedAt = new Date();
       await this.pagamentoRepo.save(pagamento);
     }, 2000);
+
+    // .unref() permite que o processo Node.js termine mesmo com o timer ativo
+    // Isso é importante para testes e não afeta o comportamento em produção
+    timer.unref();
 
     return pagamento;
   }
