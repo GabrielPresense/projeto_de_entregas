@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Pagamento, StatusPagamento } from './pagamento.entity';
+import { Pagamento, StatusPagamento, MetodoPagamento } from './pagamento.entity';
 import { Pedido } from '../pedidos/pedido.entity';
 import { CreatePagamentoDto } from './dto/create-pagamento.dto';
 import { UpdatePagamentoDto } from './dto/update-pagamento.dto';
+import { MercadoPagoService } from './mercado-pago.service';
 
 @Injectable()
 export class PagamentosService {
@@ -13,6 +14,7 @@ export class PagamentosService {
     private readonly pagamentoRepo: Repository<Pagamento>,
     @InjectRepository(Pedido)
     private readonly pedidoRepo: Repository<Pedido>,
+    private readonly mercadoPagoService: MercadoPagoService,
   ) {}
 
   async create(data: CreatePagamentoDto): Promise<Pagamento> {
@@ -75,22 +77,87 @@ export class PagamentosService {
 
   async processarPagamento(id: number): Promise<Pagamento> {
     const pagamento = await this.findOne(id);
+
+    if (pagamento.status === StatusPagamento.APROVADO) {
+      return pagamento;
+    }
+
     pagamento.status = StatusPagamento.PROCESSANDO;
     await this.pagamentoRepo.save(pagamento);
 
-    // Simulação de processamento de pagamento
-    // Aqui você integraria com um gateway de pagamento real
-    const timer = setTimeout(async () => {
-      pagamento.status = StatusPagamento.APROVADO;
-      pagamento.processedAt = new Date();
+    try {
+      // Se for PIX, integra com Mercado Pago
+      if (pagamento.metodoPagamento === MetodoPagamento.PIX) {
+        const valor = parseFloat(pagamento.valor);
+        const descricao = `Pagamento pedido #${pagamento.pedido.id}`;
+
+        const response = await this.mercadoPagoService.criarPagamentoPix(
+          valor,
+          descricao,
+        );
+
+        // Salva os dados do PIX retornados pelo Mercado Pago
+        pagamento.transacaoId = response.id;
+        pagamento.qrCode = response.point_of_interaction?.transaction_data?.qr_code;
+        pagamento.qrCodeBase64 =
+          response.point_of_interaction?.transaction_data?.qr_code_base64;
+        pagamento.ticketUrl =
+          response.point_of_interaction?.transaction_data?.ticket_url;
+        pagamento.status = StatusPagamento.PENDENTE; // PIX fica pendente até ser pago
+
+        await this.pagamentoRepo.save(pagamento);
+
+        return pagamento;
+      } else {
+        // Para outros métodos de pagamento, simula processamento
+        const timer = setTimeout(async () => {
+          pagamento.status = StatusPagamento.APROVADO;
+          pagamento.processedAt = new Date();
+          await this.pagamentoRepo.save(pagamento);
+        }, 2000);
+
+        timer.unref(); // Permite que o processo termine mesmo com timer ativo
+        return pagamento;
+      }
+    } catch (error) {
+      pagamento.status = StatusPagamento.RECUSADO;
       await this.pagamentoRepo.save(pagamento);
-    }, 2000);
+      throw error;
+    }
+  }
 
-    // .unref() permite que o processo Node.js termine mesmo com o timer ativo
-    // Isso é importante para testes e não afeta o comportamento em produção
-    timer.unref();
+  /**
+   * Consulta o status de um pagamento no Mercado Pago
+   * Útil para verificar se um pagamento PIX foi aprovado
+   */
+  async consultarStatusPagamento(id: number): Promise<Pagamento> {
+    const pagamento = await this.findOne(id);
 
-    return pagamento;
+    if (!pagamento.transacaoId) {
+      return pagamento;
+    }
+
+    try {
+      const statusMercadoPago =
+        await this.mercadoPagoService.consultarPagamento(
+          pagamento.transacaoId,
+        );
+
+      // Atualiza o status baseado na resposta do Mercado Pago
+      if (statusMercadoPago.status === 'approved') {
+        pagamento.status = StatusPagamento.APROVADO;
+        pagamento.processedAt = new Date();
+      } else if (statusMercadoPago.status === 'rejected') {
+        pagamento.status = StatusPagamento.RECUSADO;
+      } else if (statusMercadoPago.status === 'pending') {
+        pagamento.status = StatusPagamento.PENDENTE;
+      }
+
+      await this.pagamentoRepo.save(pagamento);
+      return pagamento;
+    } catch (error) {
+      throw new Error('Erro ao consultar status do pagamento');
+    }
   }
 }
 

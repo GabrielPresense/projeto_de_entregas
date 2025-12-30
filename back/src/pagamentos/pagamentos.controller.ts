@@ -49,5 +49,10 @@ export class PagamentosController {
     await this.service.remove(id);
     return { message: 'Pagamento removido com sucesso' };
   }
+
+  @Get(':id/status')
+  async consultarStatus(@Param('id', ParseIntPipe) id: number) {
+    return await this.service.consultarStatusPagamento(id);
+  }
 }
 
