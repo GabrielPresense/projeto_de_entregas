@@ -1,5 +1,12 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  ManyToMany,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { Rota } from '../rotas/rota.entity';
+import { Entregador } from '../entregadores/entregador.entity';
 
 export enum TipoVeiculo {
   MOTO = 'moto',
@@ -36,5 +43,8 @@ export class Veiculo {
 
   @OneToMany(() => Rota, (rota) => rota.veiculo)
   rotas!: Rota[];
+
+  @ManyToMany(() => Entregador, (entregador) => entregador.veiculos)
+  entregadores!: Entregador[];
 }
 

@@ -1,5 +1,13 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  ManyToMany,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  JoinTable,
+} from 'typeorm';
 import { Pedido } from '../pedidos/pedido.entity';
+import { Veiculo } from '../veiculos/veiculo.entity';
 
 export enum StatusEntregador {
   DISPONIVEL = 'disponivel',
@@ -33,5 +41,13 @@ export class Entregador {
 
   @OneToMany(() => Pedido, (pedido) => pedido.entregador)
   pedidos!: Pedido[];
+
+  @ManyToMany(() => Veiculo, (veiculo) => veiculo.entregadores)
+  @JoinTable({
+    name: 'entregadores_veiculos',
+    joinColumn: { name: 'entregador_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'veiculo_id', referencedColumnName: 'id' },
+  })
+  veiculos!: Veiculo[];
 }
 

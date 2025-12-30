@@ -44,5 +44,21 @@ export class EntregadoresController {
     await this.service.remove(id);
     return { message: 'Entregador removido com sucesso' };
   }
+
+  @Post(':id/veiculos/:veiculoId')
+  async adicionarVeiculo(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('veiculoId', ParseIntPipe) veiculoId: number,
+  ) {
+    return await this.service.adicionarVeiculo(id, veiculoId);
+  }
+
+  @Delete(':id/veiculos/:veiculoId')
+  async removerVeiculo(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('veiculoId', ParseIntPipe) veiculoId: number,
+  ) {
+    return await this.service.removerVeiculo(id, veiculoId);
+  }
 }
 
