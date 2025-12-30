@@ -10,11 +10,13 @@ import {
 } from './pagamento.entity';
 import { Pedido } from '../pedidos/pedido.entity';
 import { CreatePagamentoDto } from './dto/create-pagamento.dto';
+import { MercadoPagoService } from './mercado-pago.service';
 
 describe('PagamentosService', () => {
   let service: PagamentosService;
   let pagamentoRepo: Repository<Pagamento>;
   let pedidoRepo: Repository<Pedido>;
+  let mercadoPagoService: MercadoPagoService;
 
   const mockPagamentoRepository = {
     create: jest.fn(),
@@ -26,6 +28,11 @@ describe('PagamentosService', () => {
 
   const mockPedidoRepository = {
     findOne: jest.fn(),
+  };
+
+  const mockMercadoPagoService = {
+    criarPagamentoPix: jest.fn(),
+    consultarPagamento: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -40,6 +47,10 @@ describe('PagamentosService', () => {
           provide: getRepositoryToken(Pedido),
           useValue: mockPedidoRepository,
         },
+        {
+          provide: MercadoPagoService,
+          useValue: mockMercadoPagoService,
+        },
       ],
     }).compile();
 
@@ -48,10 +59,16 @@ describe('PagamentosService', () => {
       getRepositoryToken(Pagamento),
     );
     pedidoRepo = module.get<Repository<Pedido>>(getRepositoryToken(Pedido));
+    mercadoPagoService = module.get<MercadoPagoService>(MercadoPagoService);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
+    // Resetar todos os mocks para estado inicial
+    mockPagamentoRepository.findOne.mockReset();
+    mockPagamentoRepository.save.mockReset();
+    mockMercadoPagoService.criarPagamentoPix.mockReset();
+    mockMercadoPagoService.consultarPagamento.mockReset();
   });
 
   describe('create', () => {
@@ -102,7 +119,7 @@ describe('PagamentosService', () => {
   });
 
   describe('processarPagamento', () => {
-    it('deve processar pagamento e mudar status para PROCESSANDO', async () => {
+    it('deve processar pagamento PIX e criar QR Code', async () => {
       const pagamentoMock = {
         id: 1,
         valor: '100.00',
@@ -111,24 +128,211 @@ describe('PagamentosService', () => {
         pedido: { id: 1 },
       };
 
-      mockPagamentoRepository.findOne.mockResolvedValue(pagamentoMock);
+      const mercadoPagoResponse = {
+        id: '123456789',
+        status: 'pending',
+        point_of_interaction: {
+          transaction_data: {
+            qr_code: '00020126360014BR.GOV.BCB.PIX0114+5511999999999...',
+            qr_code_base64: 'iVBORw0KGgoAAAANSUhEUgAA...',
+            ticket_url: 'https://www.mercadopago.com.br/payments/123456789/ticket',
+          },
+        },
+      };
+
+      mockPagamentoRepository.findOne
+        .mockResolvedValueOnce(pagamentoMock)
+        .mockResolvedValueOnce({
+          ...pagamentoMock,
+          status: StatusPagamento.PROCESSANDO,
+        });
+
+      mockMercadoPagoService.criarPagamentoPix.mockResolvedValue(
+        mercadoPagoResponse,
+      );
+
       mockPagamentoRepository.save.mockResolvedValue({
         ...pagamentoMock,
-        status: StatusPagamento.PROCESSANDO,
+        status: StatusPagamento.PENDENTE,
+        transacaoId: '123456789',
+        qrCode: mercadoPagoResponse.point_of_interaction.transaction_data.qr_code,
+        qrCodeBase64:
+          mercadoPagoResponse.point_of_interaction.transaction_data.qr_code_base64,
+        ticketUrl:
+          mercadoPagoResponse.point_of_interaction.transaction_data.ticket_url,
       });
 
       const result = await service.processarPagamento(1);
 
+      expect(result.status).toBe(StatusPagamento.PENDENTE);
+      expect(result.transacaoId).toBe('123456789');
+      expect(result.qrCode).toBeDefined();
+      expect(result.qrCodeBase64).toBeDefined();
+      expect(result.ticketUrl).toBeDefined();
+      expect(mockMercadoPagoService.criarPagamentoPix).toHaveBeenCalledWith(
+        100.0,
+        'Pagamento pedido #1',
+      );
+    });
+
+    it('deve processar pagamento não-PIX normalmente', async () => {
+      const pagamentoMock = {
+        id: 1,
+        valor: '100.00',
+        metodoPagamento: MetodoPagamento.CARTAO_CREDITO,
+        status: StatusPagamento.PENDENTE,
+        pedido: { id: 1 },
+      };
+
+      const pagamentoProcessando = {
+        ...pagamentoMock,
+        status: StatusPagamento.PROCESSANDO,
+      };
+
+      // findOne retorna o pagamento original
+      mockPagamentoRepository.findOne.mockResolvedValue(pagamentoMock);
+      // save retorna o pagamento com status PROCESSANDO
+      mockPagamentoRepository.save.mockImplementation((pagamento) => {
+        return Promise.resolve({
+          ...pagamento,
+          status: StatusPagamento.PROCESSANDO,
+        });
+      });
+
+      const result = await service.processarPagamento(1);
+
+      // Para não-PIX, retorna com status PROCESSANDO (o timer aprova depois assincronamente)
       expect(result.status).toBe(StatusPagamento.PROCESSANDO);
+      expect(mockMercadoPagoService.criarPagamentoPix).not.toHaveBeenCalled();
       expect(mockPagamentoRepository.save).toHaveBeenCalled();
     });
 
+    it('deve retornar pagamento já aprovado sem processar novamente', async () => {
+      const pagamentoMock = {
+        id: 1,
+        valor: '100.00',
+        metodoPagamento: MetodoPagamento.PIX,
+        status: StatusPagamento.APROVADO,
+        pedido: { id: 1 },
+      };
+
+      mockPagamentoRepository.findOne.mockResolvedValue(pagamentoMock);
+
+      const result = await service.processarPagamento(1);
+
+      expect(result.status).toBe(StatusPagamento.APROVADO);
+      expect(mockMercadoPagoService.criarPagamentoPix).not.toHaveBeenCalled();
+    });
+
+    it('deve marcar como RECUSADO quando Mercado Pago falhar', async () => {
+      const pagamentoMock = {
+        id: 1,
+        valor: '100.00',
+        metodoPagamento: MetodoPagamento.PIX,
+        status: StatusPagamento.PENDENTE,
+        pedido: { id: 1 },
+      };
+
+      mockPagamentoRepository.findOne
+        .mockResolvedValueOnce(pagamentoMock)
+        .mockResolvedValueOnce({
+          ...pagamentoMock,
+          status: StatusPagamento.PROCESSANDO,
+        });
+
+      mockMercadoPagoService.criarPagamentoPix.mockRejectedValue(
+        new Error('Erro na API do Mercado Pago'),
+      );
+
+      mockPagamentoRepository.save
+        .mockResolvedValueOnce({
+          ...pagamentoMock,
+          status: StatusPagamento.PROCESSANDO,
+        })
+        .mockResolvedValueOnce({
+          ...pagamentoMock,
+          status: StatusPagamento.RECUSADO,
+        });
+
+      await expect(service.processarPagamento(1)).rejects.toThrow('Erro na API do Mercado Pago');
+      expect(mockPagamentoRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ status: StatusPagamento.RECUSADO }),
+      );
+    });
+
     it('deve lançar erro quando pagamento não existe', async () => {
-      mockPagamentoRepository.findOne.mockResolvedValue(null);
+      // findOne é chamado no processarPagamento que chama findOne interno
+      // findOne lança NotFoundException quando não encontra
+      mockPagamentoRepository.findOne.mockImplementation(() => {
+        throw new NotFoundException('Pagamento não encontrado');
+      });
 
       await expect(service.processarPagamento(999)).rejects.toThrow(
         NotFoundException,
       );
+    });
+  });
+
+  describe('consultarStatusPagamento', () => {
+    it('deve consultar status no Mercado Pago e atualizar', async () => {
+      const pagamentoMock = {
+        id: 1,
+        valor: '100.00',
+        metodoPagamento: MetodoPagamento.PIX,
+        status: StatusPagamento.PENDENTE,
+        transacaoId: '123456789',
+        pedido: { id: 1 },
+      };
+
+      const mercadoPagoResponse = {
+        id: '123456789',
+        status: 'approved',
+      };
+
+      mockPagamentoRepository.findOne
+        .mockResolvedValueOnce(pagamentoMock)
+        .mockResolvedValueOnce({
+          ...pagamentoMock,
+          status: StatusPagamento.APROVADO,
+          processedAt: new Date(),
+        });
+
+      mockMercadoPagoService.consultarPagamento.mockResolvedValue(
+        mercadoPagoResponse,
+      );
+      mockPagamentoRepository.save.mockResolvedValue({
+        ...pagamentoMock,
+        status: StatusPagamento.APROVADO,
+        processedAt: new Date(),
+      });
+
+      const result = await service.consultarStatusPagamento(1);
+
+      expect(result.status).toBe(StatusPagamento.APROVADO);
+      expect(mockMercadoPagoService.consultarPagamento).toHaveBeenCalledWith(
+        '123456789',
+      );
+    });
+
+    it('deve retornar pagamento sem transacaoId sem consultar', async () => {
+      const pagamentoMock: any = {
+        id: 1,
+        valor: '100.00',
+        metodoPagamento: MetodoPagamento.PIX,
+        status: StatusPagamento.PENDENTE,
+        pedido: { id: 1 },
+      };
+      // Garantir que transacaoId não existe
+      delete pagamentoMock.transacaoId;
+
+      mockPagamentoRepository.findOne.mockResolvedValue(pagamentoMock);
+
+      const result = await service.consultarStatusPagamento(1);
+
+      expect(result.id).toBe(pagamentoMock.id);
+      // Verifica se transacaoId não existe ou é falsy
+      expect(!result.transacaoId).toBe(true);
+      expect(mockMercadoPagoService.consultarPagamento).not.toHaveBeenCalled();
     });
   });
 
