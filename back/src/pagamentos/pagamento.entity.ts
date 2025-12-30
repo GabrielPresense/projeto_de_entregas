@@ -46,6 +46,15 @@ export class Pagamento {
   @Column({ type: 'varchar', length: 255, nullable: true })
   transacaoId?: string;
 
+  @Column({ type: 'text', nullable: true })
+  qrCode?: string;
+
+  @Column({ type: 'text', nullable: true })
+  qrCodeBase64?: string;
+
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  ticketUrl?: string;
+
   @ManyToOne(() => Pedido, (pedido) => pedido.pagamento)
   @JoinColumn()
   pedido!: Pedido;

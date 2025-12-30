@@ -4,12 +4,12 @@ Sistema de gerenciamento de entregas com rastreamento em tempo real via WebSocke
 
 ## Funcionalidades
 
-- ✅ Cadastro de Entregadores
-- ✅ Cadastro de Veículos
-- ✅ Cadastro de Pedidos
-- ✅ Cadastro de Rotas
-- ✅ Sistema de Pagamentos
-- ✅ Rastreamento em tempo real via WebSocket
+- Cadastro de Entregadores
+- Cadastro de Veículos
+- Cadastro de Pedidos
+- Cadastro de Rotas
+- Sistema de Pagamentos
+- Rastreamento em tempo real via WebSocket
 
 ## Tecnologias
 
@@ -36,6 +36,14 @@ DB_PASS=15789
 DB_NAME=base_de_dados
 PORT=3000
 NODE_ENV=development
+
+# Mercado Pago - PIX Integration (Opcional)
+# Para obter o token:
+# 1. Acesse: https://www.mercadopago.com.br/developers
+# 2. Crie uma aplicação
+# 3. Copie o Access Token (Test) para desenvolvimento
+# 4. Cole abaixo (sem o token, usará um mock para testes)
+MERCADO_PAGO_ACCESS_TOKEN=TEST-SEU_TOKEN_AQUI
 ```
 
 3. Inicie o banco de dados MySQL com Docker:
