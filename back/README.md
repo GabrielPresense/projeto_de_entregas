@@ -1,98 +1,174 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Backend - Sistema de Entregas
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Sistema de gerenciamento de entregas com rastreamento em tempo real via WebSocket.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Funcionalidades
 
-## Description
+- ✅ Cadastro de Entregadores
+- ✅ Cadastro de Veículos
+- ✅ Cadastro de Pedidos
+- ✅ Cadastro de Rotas
+- ✅ Sistema de Pagamentos
+- ✅ Rastreamento em tempo real via WebSocket
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Tecnologias
 
-## Project setup
+- NestJS
+- TypeORM
+- MySQL
+- Socket.IO (WebSocket)
+- class-validator
+- class-transformer
 
+## Instalação
+
+1. Instale as dependências:
 ```bash
-$ npm install
+npm install
 ```
 
-## Compile and run the project
-
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+2. Configure as variáveis de ambiente criando um arquivo `.env`:
+```env
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=usuario
+DB_PASS=15789
+DB_NAME=base_de_dados
+PORT=3000
+NODE_ENV=development
 ```
 
-## Run tests
-
+3. Inicie o banco de dados MySQL com Docker:
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm run db:up
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
+4. Inicie o servidor:
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm run start:dev
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Endpoints da API
 
-## Resources
+### Entregadores
+- `GET /entregadores` - Lista todos os entregadores
+- `GET /entregadores/:id` - Busca um entregador
+- `POST /entregadores` - Cria um entregador
+- `PUT /entregadores/:id` - Atualiza um entregador
+- `DELETE /entregadores/:id` - Remove um entregador
 
-Check out a few resources that may come in handy when working with NestJS:
+### Veículos
+- `GET /veiculos` - Lista todos os veículos
+- `GET /veiculos/disponiveis` - Lista veículos disponíveis
+- `GET /veiculos/:id` - Busca um veículo
+- `POST /veiculos` - Cria um veículo
+- `PUT /veiculos/:id` - Atualiza um veículo
+- `DELETE /veiculos/:id` - Remove um veículo
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### Pedidos
+- `GET /pedidos` - Lista todos os pedidos
+- `GET /pedidos/:id` - Busca um pedido
+- `POST /pedidos` - Cria um pedido
+- `PUT /pedidos/:id` - Atualiza um pedido
+- `PUT /pedidos/:id/status` - Atualiza o status de um pedido
+- `PUT /pedidos/:id/location` - Atualiza a localização de um pedido
+- `DELETE /pedidos/:id` - Remove um pedido
 
-## Support
+### Rotas
+- `GET /rotas` - Lista todas as rotas
+- `GET /rotas/:id` - Busca uma rota
+- `POST /rotas` - Cria uma rota
+- `PUT /rotas/:id` - Atualiza uma rota
+- `DELETE /rotas/:id` - Remove uma rota
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### Pagamentos
+- `GET /pagamentos` - Lista todos os pagamentos
+- `GET /pagamentos/:id` - Busca um pagamento
+- `POST /pagamentos` - Cria um pagamento
+- `POST /pagamentos/:id/processar` - Processa um pagamento
+- `PUT /pagamentos/:id` - Atualiza um pagamento
+- `DELETE /pagamentos/:id` - Remove um pagamento
 
-## Stay in touch
+## WebSocket - Rastreamento em Tempo Real
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Eventos do Cliente
 
-## License
+#### Entrar no rastreamento de um pedido
+```javascript
+socket.emit('join_tracking', { pedidoId: 1 });
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+#### Sair do rastreamento de um pedido
+```javascript
+socket.emit('leave_tracking', { pedidoId: 1 });
+```
+
+#### Atualizar localização
+```javascript
+socket.emit('update_location', {
+  pedidoId: 1,
+  latitude: -23.5505,
+  longitude: -46.6333
+});
+```
+
+#### Obter status do pedido
+```javascript
+socket.emit('get_pedido_status', { pedidoId: 1 });
+```
+
+### Eventos do Servidor
+
+#### Localização atualizada
+```javascript
+socket.on('location_updated', (data) => {
+  console.log('Localização atualizada:', data);
+  // data: { pedidoId, latitude, longitude, status, timestamp }
+});
+```
+
+#### Status do pedido alterado
+```javascript
+socket.on('status_changed', (data) => {
+  console.log('Status alterado:', data);
+  // data: { pedidoId, status, timestamp }
+});
+```
+
+## Status dos Pedidos
+
+- `pendente` - Pedido criado, aguardando confirmação
+- `confirmado` - Pedido confirmado
+- `em_preparacao` - Pedido em preparação
+- `pronto_para_entrega` - Pronto para ser entregue
+- `em_transito` - Em trânsito para o destino
+- `entregue` - Pedido entregue
+- `cancelado` - Pedido cancelado
+
+## Status dos Entregadores
+
+- `disponivel` - Disponível para entregas
+- `em_entrega` - Realizando uma entrega
+- `indisponivel` - Indisponível
+
+## Tipos de Veículos
+
+- `moto` - Motocicleta
+- `carro` - Carro
+- `van` - Van
+- `caminhao` - Caminhão
+
+## Métodos de Pagamento
+
+- `cartao_credito` - Cartão de Crédito
+- `cartao_debito` - Cartão de Débito
+- `pix` - PIX
+- `boleto` - Boleto
+
+## Status dos Pagamentos
+
+- `pendente` - Aguardando processamento
+- `processando` - Em processamento
+- `aprovado` - Aprovado
+- `recusado` - Recusado
+- `reembolsado` - Reembolsado
