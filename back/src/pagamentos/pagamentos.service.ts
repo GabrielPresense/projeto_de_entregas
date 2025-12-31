@@ -47,6 +47,9 @@ export class PagamentosService {
       relations: ['pedido'],
     });
     if (!pagamento) throw new NotFoundException('Pagamento não encontrado');
+    if (!pagamento.pedido) {
+      throw new NotFoundException('Pedido associado ao pagamento não encontrado');
+    }
     return pagamento;
   }
 
@@ -86,7 +89,7 @@ export class PagamentosService {
     await this.pagamentoRepo.save(pagamento);
 
     try {
-      // Se for PIX, integra com Mercado Pago
+      // Se for PIX, chama o Mercado Pago pra gerar o QR Code
       if (pagamento.metodoPagamento === MetodoPagamento.PIX) {
         const valor = parseFloat(pagamento.valor);
         const descricao = `Pagamento pedido #${pagamento.pedido.id}`;
@@ -96,43 +99,52 @@ export class PagamentosService {
           descricao,
         );
 
-        // Salva os dados do PIX retornados pelo Mercado Pago
+        // Salva tudo que o Mercado Pago retornou (QR Code, URL, etc)
         pagamento.transacaoId = response.id;
         pagamento.qrCode = response.point_of_interaction?.transaction_data?.qr_code;
         pagamento.qrCodeBase64 =
           response.point_of_interaction?.transaction_data?.qr_code_base64;
         pagamento.ticketUrl =
           response.point_of_interaction?.transaction_data?.ticket_url;
-        pagamento.status = StatusPagamento.PENDENTE; // PIX fica pendente até ser pago
+        // PIX fica pendente até o cliente pagar, então não aprova automaticamente
+        pagamento.status = StatusPagamento.PENDENTE;
 
         await this.pagamentoRepo.save(pagamento);
 
         return pagamento;
       } else {
-        // Para outros métodos de pagamento, simula processamento
+        // Pra outros métodos (cartão, boleto) simula um processamento assíncrono
         const timer = setTimeout(async () => {
           pagamento.status = StatusPagamento.APROVADO;
           pagamento.processedAt = new Date();
           await this.pagamentoRepo.save(pagamento);
         }, 2000);
 
-        timer.unref(); // Permite que o processo termine mesmo com timer ativo
+        // Isso aqui deixa o timer rodar sem travar o processo
+        timer.unref();
         return pagamento;
       }
-    } catch (error) {
+    } catch (error: any) {
+      // Se deu erro, marca como recusado e joga o erro pra frente
       pagamento.status = StatusPagamento.RECUSADO;
       await this.pagamentoRepo.save(pagamento);
-      throw error;
+      
+      // Loga tudo pra eu ver depois o que aconteceu
+      console.error('Erro ao processar pagamento:', error);
+      console.error('Stack:', error.stack);
+      
+      // Tenta pegar uma mensagem de erro útil, senão usa uma genérica
+      const errorMessage = error?.response?.data?.message || error?.message || 'Erro desconhecido ao processar pagamento';
+      throw new Error(`Falha ao processar pagamento PIX: ${errorMessage}`);
     }
   }
 
-  /**
-   * Consulta o status de um pagamento no Mercado Pago
-   * Útil para verificar se um pagamento PIX foi aprovado
-   */
+  // Consulta o status no Mercado Pago e atualiza aqui no banco
+  // Útil pra verificar se um PIX que estava pendente já foi pago
   async consultarStatusPagamento(id: number): Promise<Pagamento> {
     const pagamento = await this.findOne(id);
 
+    // Se não tem transacaoId, não tem como consultar no Mercado Pago
     if (!pagamento.transacaoId) {
       return pagamento;
     }
@@ -143,7 +155,7 @@ export class PagamentosService {
           pagamento.transacaoId,
         );
 
-      // Atualiza o status baseado na resposta do Mercado Pago
+      // Atualiza o status aqui no banco baseado no que o Mercado Pago retornou
       if (statusMercadoPago.status === 'approved') {
         pagamento.status = StatusPagamento.APROVADO;
         pagamento.processedAt = new Date();

@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpException,
+  HttpStatus,
   Param,
   ParseIntPipe,
   Post,
@@ -23,7 +25,18 @@ export class PagamentosController {
 
   @Post(':id/processar')
   async processar(@Param('id', ParseIntPipe) id: number) {
-    return await this.service.processarPagamento(id);
+    try {
+      return await this.service.processarPagamento(id);
+    } catch (error: any) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: error.message || 'Erro ao processar pagamento',
+          error: 'Internal server error',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Get()

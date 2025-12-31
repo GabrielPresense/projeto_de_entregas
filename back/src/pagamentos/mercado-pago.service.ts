@@ -21,7 +21,7 @@ export class MercadoPagoService {
   private readonly accessToken: string;
 
   constructor(private configService: ConfigService) {
-    // Pega o token do .env ou usa um token de teste mockado
+    // Tenta pegar o token do .env, se não tiver usa um mock só pra não quebrar
     this.accessToken =
       this.configService.get<string>('MERCADO_PAGO_ACCESS_TOKEN') ||
       'TEST-1234567890123456-123456-abcdef1234567890abcdef1234567890-123456789';
@@ -41,13 +41,7 @@ export class MercadoPagoService {
     }
   }
 
-  /**
-   * Cria um pagamento PIX via API do Mercado Pago
-   * @param valor Valor do pagamento
-   * @param descricao Descrição do pagamento
-   * @param emailPagador Email do pagador (opcional)
-   * @returns Dados do pagamento incluindo QR Code PIX
-   */
+  // Cria um pagamento PIX no Mercado Pago e retorna o QR Code
   async criarPagamentoPix(
     valor: number,
     descricao: string,
@@ -63,6 +57,9 @@ export class MercadoPagoService {
         },
       };
 
+      // O Mercado Pago exige esse header pra evitar processar o mesmo pagamento duas vezes
+      const idempotencyKey = `pix-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+
       this.logger.log(
         `Criando pagamento PIX: R$ ${valor.toFixed(2)} - ${descricao}`,
       );
@@ -70,6 +67,11 @@ export class MercadoPagoService {
       const response = await this.axiosInstance.post<MercadoPagoPixResponse>(
         '/v1/payments',
         payload,
+        {
+          headers: {
+            'X-Idempotency-Key': idempotencyKey,
+          },
+        },
       );
 
       this.logger.log(`Pagamento PIX criado: ${response.data.id}`);
@@ -84,11 +86,7 @@ export class MercadoPagoService {
     }
   }
 
-  /**
-   * Consulta o status de um pagamento no Mercado Pago
-   * @param paymentId ID do pagamento no Mercado Pago
-   * @returns Dados atualizados do pagamento
-   */
+  // Consulta o status de um pagamento no Mercado Pago pra ver se foi aprovado
   async consultarPagamento(paymentId: string): Promise<any> {
     try {
       this.logger.log(`Consultando pagamento: ${paymentId}`);

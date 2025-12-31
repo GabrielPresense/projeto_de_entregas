@@ -5,14 +5,14 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
-  // Habilita CORS
+  // Permite requisições de qualquer origem (em produção mudar isso)
   app.enableCors({
     origin: '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
 
-  // Habilita validação global
+  // Valida automaticamente todos os DTOs que chegam
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
