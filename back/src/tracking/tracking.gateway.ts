@@ -70,7 +70,7 @@ export class TrackingGateway
         location,
       );
 
-      // Emite a atualização para todos os clientes que estão rastreando este pedido
+      // Avisa todo mundo que tá rastreando esse pedido que a localização mudou
       this.server.to(`pedido_${data.pedidoId}`).emit('location_updated', {
         pedidoId: pedido.id,
         latitude: parseFloat(pedido.latitudeAtual || '0'),
@@ -123,7 +123,7 @@ export class TrackingGateway
     }
   }
 
-  // Método para notificar mudanças de status do pedido
+  // Notifica todos os clientes quando o status do pedido muda
   async notifyStatusChange(pedidoId: number, status: string) {
     this.server.to(`pedido_${pedidoId}`).emit('status_changed', {
       pedidoId,
