@@ -1,8 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Entregador } from './entregador.entity';
 import { Veiculo } from '../veiculos/veiculo.entity';
+import { Pedido } from '../pedidos/pedido.entity';
 import { CreateEntregadorDto } from './dto/create-entregador.dto';
 import { UpdateEntregadorDto } from './dto/update-entregador.dto';
 
@@ -13,6 +14,9 @@ export class EntregadoresService {
     private readonly entregadorRepo: Repository<Entregador>,
     @InjectRepository(Veiculo)
     private readonly veiculoRepo: Repository<Veiculo>,
+    @InjectRepository(Pedido)
+    private readonly pedidoRepo: Repository<Pedido>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(data: CreateEntregadorDto): Promise<Entregador> {
@@ -49,9 +53,43 @@ export class EntregadoresService {
   }
 
   async remove(id: number): Promise<void> {
-    const result = await this.entregadorRepo.delete(id);
-    if (result.affected === 0) {
+    const entregador = await this.entregadorRepo.findOne({
+      where: { id },
+      relations: ['pedidos', 'veiculos'],
+    });
+    
+    if (!entregador) {
       throw new NotFoundException('Entregador não encontrado');
+    }
+
+    // Usa transação para garantir consistência
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // Remove veículos associados (relação ManyToMany)
+      if (entregador.veiculos && entregador.veiculos.length > 0) {
+        entregador.veiculos = [];
+        await queryRunner.manager.save(entregador);
+      }
+
+      // Remove a referência do entregador dos pedidos (seta como null)
+      await queryRunner.manager.update(
+        Pedido,
+        { entregador: { id } },
+        { entregador: null as any }
+      );
+
+      // Agora pode deletar o entregador
+      await queryRunner.manager.remove(entregador);
+      
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
   }
 
