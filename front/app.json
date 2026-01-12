@@ -13,7 +13,11 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Este app precisa da sua localização para rastrear entregas em tempo real.",
+        "NSLocationAlwaysUsageDescription": "Este app precisa da sua localização para rastrear entregas em tempo real."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +25,14 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ],
+      "package": "com.gabrielpresense.front"
     },
     "web": {
       "favicon": "./assets/favicon.png"
