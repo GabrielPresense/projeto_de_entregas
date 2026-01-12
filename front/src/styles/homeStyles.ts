@@ -80,5 +80,31 @@ export const homeStyles = StyleSheet.create({
     color: '#666',
     marginBottom: 8,
   },
+  // Botão de voltar
+  backButton: {
+    padding: 10,
+    marginRight: 10,
+  },
+  backButtonText: {
+    color: '#110975',
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
+  // Header com seta e título
+  screenHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    paddingTop: 20,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  screenTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    flex: 1,
+  },
 });
 
