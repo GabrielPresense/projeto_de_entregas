@@ -49,7 +49,10 @@ async function request<T>(
       let errorMessage = 'Erro na requisição';
       try {
         const errorData = await response.json();
-        errorMessage = errorData.message || errorMessage;
+        errorMessage =
+          errorData.message ||
+          errorData.error ||
+          `Erro ${response.status}: ${response.statusText}`;
       } catch {
         // Se não conseguir ler o erro, usa uma mensagem padrão
         errorMessage = `Erro ${response.status}: ${response.statusText}`;
@@ -62,13 +65,25 @@ async function request<T>(
     // Se não tiver conteúdo, retorna vazio mesmo
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
-      return await response.json();
+      const data = await response.json();
+      return data;
     }
 
+    // Se a resposta está vazia mas o status é OK, retorna vazio
     return {} as T;
   } catch (error) {
     // Se der algum erro de rede ou qualquer outra coisa
     if (error instanceof Error) {
+      // Melhora mensagens de erro de rede
+      if (
+        error.message.includes('Network') ||
+        error.message.includes('fetch') ||
+        error.message.includes('Failed to fetch')
+      ) {
+        throw new Error(
+          `Não foi possível conectar ao servidor em ${BASE_URL}. Verifique se o backend está rodando.`,
+        );
+      }
       throw error;
     }
     throw new Error('Erro desconhecido na requisição');
@@ -89,8 +104,8 @@ export const api = {
   patch: <T>(endpoint: string, data?: any, headers?: Record<string, string>) =>
     request<T>(endpoint, { method: 'PATCH', body: data, headers }),
 
-  delete: <T>(endpoint: string, headers?: Record<string, string>) =>
-    request<T>(endpoint, { method: 'DELETE', headers }),
+  delete: <T>(endpoint: string, data?: any, headers?: Record<string, string>) =>
+    request<T>(endpoint, { method: 'DELETE', body: data, headers }),
 };
 
 // Exporta a URL caso eu precise em outro lugar
