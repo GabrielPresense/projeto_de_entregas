@@ -106,6 +106,15 @@ export class PedidosService {
     }
   }
 
+  async removeByStatus(statuses: StatusPedido[]): Promise<{ deleted: number }> {
+    const result = await this.pedidoRepo
+      .createQueryBuilder()
+      .delete()
+      .where('status IN (:...statuses)', { statuses })
+      .execute();
+    return { deleted: result.affected || 0 };
+  }
+
   async updateLocation(
     id: number,
     location: UpdateLocationDto,

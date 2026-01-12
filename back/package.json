@@ -22,7 +22,8 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "test:pix": "node test/test-pix.js",
-    "test:pix:simples": "node test/test-pix-simples.js"
+    "test:pix:simples": "node test/test-pix-simples.js",
+    "delete:pedidos-pendentes": "node scripts/delete-pedidos-pendentes-transito.js"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

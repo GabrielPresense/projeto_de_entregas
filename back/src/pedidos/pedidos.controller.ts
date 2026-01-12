@@ -28,6 +28,15 @@ export class PedidosController {
     return this.service.findAll();
   }
 
+  @Post('bulk-delete')
+  async removeByStatus(@Body() body: { statuses: StatusPedido[] }) {
+    const result = await this.service.removeByStatus(body.statuses);
+    return {
+      message: `${result.deleted} pedido(s) removido(s) com sucesso`,
+      deleted: result.deleted,
+    };
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.service.findOne(id);
