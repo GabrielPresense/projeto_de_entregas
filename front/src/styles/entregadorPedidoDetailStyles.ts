@@ -112,5 +112,21 @@ export const entregadorPedidoDetailStyles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
+  trackingActiveBox: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    paddingVertical: 15,
+    paddingHorizontal: 15,
+    marginBottom: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 50,
+  },
+  trackingActiveText: {
+    fontSize: 16,
+    color: '#34C759',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
 });
 
