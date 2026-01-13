@@ -31,7 +31,7 @@ export async function buscarEnderecoPorCEP(cep: string): Promise<EnderecoComplet
     const url = `https://viacep.com.br/ws/${cepLimpo}/json/`;
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 segundos
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
     try {
       const response = await fetch(url, {
@@ -44,7 +44,6 @@ export async function buscarEnderecoPorCEP(cep: string): Promise<EnderecoComplet
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        console.warn(`Erro ao buscar CEP: ${response.status}`);
         return null;
       }
 
@@ -52,7 +51,6 @@ export async function buscarEnderecoPorCEP(cep: string): Promise<EnderecoComplet
 
       // Verifica se o CEP foi encontrado
       if (data.erro || !data.logradouro) {
-        console.warn(`CEP não encontrado: ${cep}`);
         return null;
       }
 
@@ -66,7 +64,7 @@ export async function buscarEnderecoPorCEP(cep: string): Promise<EnderecoComplet
     } catch (fetchError: any) {
       clearTimeout(timeoutId);
       if (fetchError.name === 'AbortError') {
-        console.warn('Timeout ao buscar CEP (verifique sua conexão)');
+        // Timeout
       } else {
         console.error('Erro ao buscar CEP:', fetchError);
       }
