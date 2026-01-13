@@ -8,9 +8,10 @@ import { commonStyles } from '../../styles/commonStyles';
 interface Props {
   entregadorId: number; // ID do entregador logado
   onSelectPedido?: (pedido: Pedido) => void;
+  showHeader?: boolean; // Se deve mostrar o cabeçalho interno
 }
 
-export default function EntregadorHomeScreen({ entregadorId, onSelectPedido }: Props) {
+export default function EntregadorHomeScreen({ entregadorId, onSelectPedido, showHeader = true }: Props) {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -151,10 +152,12 @@ export default function EntregadorHomeScreen({ entregadorId, onSelectPedido }: P
 
   return (
     <View style={commonStyles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Minhas Entregas</Text>
-        <Text style={styles.headerSubtitle}>{pedidos.length} entrega(s) atribuída(s)</Text>
-      </View>
+      {showHeader && (
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Minhas Entregas</Text>
+          <Text style={styles.headerSubtitle}>{pedidos.length} entrega(s) atribuída(s)</Text>
+        </View>
+      )}
       <FlatList
         data={pedidos}
         renderItem={renderItem}
