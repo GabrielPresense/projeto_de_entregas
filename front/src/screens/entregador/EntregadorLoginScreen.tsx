@@ -5,43 +5,34 @@ import { authService, LoginCredentials } from '../../services/auth.service';
 import { commonStyles } from '../../styles/commonStyles';
 
 interface Props {
-  onLoginSuccess: (entregadorId: number) => void;
+  onLoginSuccess: (entregadorId: number, primeiroLogin?: boolean) => void;
   onBack: () => void;
 }
 
 export default function EntregadorLoginScreen({ onLoginSuccess, onBack }: Props) {
   const [loading, setLoading] = useState(false);
-  const [credentials, setCredentials] = useState<LoginCredentials>({
-    cpf: '',
-    email: '',
-  });
+  const [cpf, setCpf] = useState('');
+  const [senha, setSenha] = useState('');
 
   const handleLogin = async () => {
-    if (!credentials.cpf.trim()) {
+    if (!cpf.trim()) {
       Alert.alert('Erro', 'Digite seu CPF');
       return;
     }
-
-    if (!credentials.email.trim()) {
-      Alert.alert('Erro', 'Digite seu email');
-      return;
-    }
-
-    // Validação básica de email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(credentials.email)) {
-      Alert.alert('Erro', 'Email inválido');
+    if (!senha.trim()) {
+      Alert.alert('Erro', 'Digite sua senha');
       return;
     }
 
     try {
       setLoading(true);
-      const response = await authService.login(credentials);
+      const response = await authService.login({ cpf, senha });
 
       if (response.success && response.entregador.id) {
-        onLoginSuccess(response.entregador.id);
+        // Passa o entregadorId e primeiroLogin para o App.tsx
+        onLoginSuccess(response.entregador.id, response.primeiroLogin);
       } else {
-        Alert.alert('Erro', response.message || 'CPF ou Email inválidos');
+        Alert.alert('Erro', response.message || 'CPF ou senha inválidos');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro ao fazer login';
@@ -78,7 +69,7 @@ export default function EntregadorLoginScreen({ onLoginSuccess, onBack }: Props)
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.title}>🚚 Login Entregador</Text>
-          <Text style={styles.subtitle}>Digite suas credenciais para acessar</Text>
+          <Text style={styles.subtitle}>Digite seu CPF para acessar</Text>
         </View>
 
         <View style={styles.form}>
@@ -86,8 +77,8 @@ export default function EntregadorLoginScreen({ onLoginSuccess, onBack }: Props)
             <Text style={styles.label}>CPF *</Text>
             <TextInput
               style={styles.input}
-              value={credentials.cpf}
-              onChangeText={(text) => setCredentials({ ...credentials, cpf: formatCPF(text) })}
+              value={cpf}
+              onChangeText={(text) => setCpf(formatCPF(text))}
               placeholder="000.000.000-00"
               keyboardType="numeric"
               maxLength={14}
@@ -96,15 +87,14 @@ export default function EntregadorLoginScreen({ onLoginSuccess, onBack }: Props)
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Email *</Text>
+            <Text style={styles.label}>Senha *</Text>
             <TextInput
               style={styles.input}
-              value={credentials.email}
-              onChangeText={(text) => setCredentials({ ...credentials, email: text.trim() })}
-              placeholder="seu@email.com"
-              keyboardType="email-address"
+              value={senha}
+              onChangeText={setSenha}
+              placeholder="Digite sua senha"
+              secureTextEntry
               autoCapitalize="none"
-              autoCorrect={false}
             />
           </View>
 
@@ -121,7 +111,7 @@ export default function EntregadorLoginScreen({ onLoginSuccess, onBack }: Props)
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.backButton} onPress={onBack}>
-            <Text style={styles.backButtonText}>← Voltar</Text>
+            <Text style={styles.backButtonText}>Voltar</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

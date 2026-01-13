@@ -16,8 +16,10 @@ import ClienteSolicitarPedidoScreen from './src/screens/cliente/ClienteSolicitar
 import EntregadorLoginScreen from './src/screens/entregador/EntregadorLoginScreen';
 import EntregadorHomeScreen from './src/screens/entregador/EntregadorHomeScreen';
 import EntregadorPedidoDetailScreen from './src/screens/entregador/EntregadorPedidoDetailScreen';
+import AlterarSenhaScreen from './src/screens/entregador/AlterarSenhaScreen';
 
 // Telas do perfil Empresa/Administrador
+import AdminLoginScreen from './src/screens/empresa/AdminLoginScreen';
 import PedidosListScreen from './src/screens/empresa/PedidosListScreen';
 import PedidoFormScreen from './src/screens/empresa/PedidoFormScreen';
 import PedidoDetailScreen from './src/screens/empresa/PedidoDetailScreen';
@@ -41,6 +43,7 @@ import { Rota } from './src/types/rota.types';
 type Profile = 'admin' | 'cliente' | 'entregador' | null;
 type Screen =
   | 'profileSelection'
+  | 'adminLogin'
   | 'home'
   | 'pedidosList'
   | 'pedidoForm'
@@ -62,7 +65,8 @@ type Screen =
   | 'clienteSolicitarPedido'
   | 'entregadorLogin'
   | 'entregadorHome'
-  | 'entregadorPedidoDetail';
+  | 'entregadorPedidoDetail'
+  | 'alterarSenha';
 
 export default function App() {
   const [profile, setProfile] = useState<Profile>(null);
@@ -77,7 +81,9 @@ export default function App() {
   const [selectedRota, setSelectedRota] = useState<Rota | null>(null);
   const [editingRota, setEditingRota] = useState<Rota | null>(null);
   const [entregadorId, setEntregadorId] = useState<number | null>(null); // ID do entregador logado
+  const [adminLoggedIn, setAdminLoggedIn] = useState(false); // Estado de autenticação do admin
   const [refreshEntregadores, setRefreshEntregadores] = useState(0); // Para forçar atualização da lista
+  const [primeiroLogin, setPrimeiroLogin] = useState(false); // Flag para primeiro login
 
   const resetAllStates = () => {
     setSelectedPedido(null);
@@ -89,6 +95,8 @@ export default function App() {
     setSelectedRota(null);
     setEditingRota(null);
     setEntregadorId(null);
+    setAdminLoggedIn(false);
+    setRefreshEntregadores(0);
   };
 
   const handleSelectProfile = (selectedProfile: 'admin' | 'cliente' | 'entregador') => {
@@ -103,21 +111,42 @@ export default function App() {
       setPreviousScreen('entregadorLogin');
       setEntregadorId(null);
     } else {
-      // Admin vai para a home administrativa
-      setCurrentScreen('home');
-      setPreviousScreen('home');
+      // Admin precisa fazer login
+      setCurrentScreen('adminLogin');
+      setPreviousScreen('adminLogin');
+      setAdminLoggedIn(false);
     }
   };
 
-  const handleEntregadorLoginSuccess = (id: number) => {
+  const handleEntregadorLoginSuccess = (id: number, isPrimeiroLogin?: boolean) => {
     setEntregadorId(id);
+    if (isPrimeiroLogin) {
+      setPrimeiroLogin(true);
+      setCurrentScreen('alterarSenha');
+      setPreviousScreen('alterarSenha');
+    } else {
+      setPrimeiroLogin(false);
+      setCurrentScreen('entregadorHome');
+      setPreviousScreen('entregadorHome');
+    }
+  };
+
+  const handleSenhaAlterada = () => {
+    setPrimeiroLogin(false);
     setCurrentScreen('entregadorHome');
     setPreviousScreen('entregadorHome');
+  };
+
+  const handleAdminLoginSuccess = () => {
+    setAdminLoggedIn(true);
+    setCurrentScreen('home');
+    setPreviousScreen('home');
   };
 
   const handleLogout = () => {
     setProfile(null);
     setEntregadorId(null);
+    setAdminLoggedIn(false);
     setCurrentScreen('profileSelection');
     setPreviousScreen('profileSelection');
     resetAllStates();
@@ -138,21 +167,39 @@ export default function App() {
   };
 
   const goBack = () => {
-    if (currentScreen === 'pedidosList') {
-      setCurrentScreen('home');
-      resetAllStates();
-    } else if (currentScreen === 'pedidoDetail') {
-      setCurrentScreen('pedidosList');
-      setSelectedPedido(null);
-    } else if (currentScreen === 'entregadoresList') {
-      setCurrentScreen('home');
-      resetAllStates();
-    } else {
-      setCurrentScreen(previousScreen);
-      if (previousScreen === 'home' || previousScreen === 'clienteHome' || previousScreen === 'publicTracking' || previousScreen === 'entregadorHome' || previousScreen === 'clienteMenu') {
-        resetAllStates();
+    // Se estiver no perfil entregador, volta para entregadorHome
+    if (profile === 'entregador') {
+      if (currentScreen === 'entregadorPedidoDetail') {
+        setCurrentScreen('entregadorHome');
+        setSelectedPedido(null);
+      } else {
+        setCurrentScreen('entregadorHome');
       }
+      return;
     }
+
+    // Para todas as telas, volta para a tela anterior
+    // Limpa apenas seleções específicas quando necessário
+    if (currentScreen === 'pedidoDetail') {
+      setSelectedPedido(null);
+    } else if (currentScreen === 'entregadorDetail') {
+      setSelectedEntregador(null);
+    } else if (currentScreen === 'veiculoDetail') {
+      setSelectedVeiculo(null);
+    } else if (currentScreen === 'rotaDetail') {
+      setSelectedRota(null);
+    } else if (currentScreen === 'pedidoForm') {
+      setEditingPedido(null);
+    } else if (currentScreen === 'entregadorForm') {
+      setEditingEntregador(null);
+    } else if (currentScreen === 'veiculoForm') {
+      setEditingVeiculo(null);
+    } else if (currentScreen === 'rotaForm') {
+      setEditingRota(null);
+    }
+
+    // Volta para a tela anterior
+    setCurrentScreen(previousScreen);
   };
 
   // ========== Handler do botão de voltar nativo do Android ==========
@@ -173,43 +220,22 @@ export default function App() {
         currentScreen === 'publicTracking' ||
         currentScreen === 'clienteMenu' ||
         currentScreen === 'entregadorHome' ||
-        currentScreen === 'entregadorLogin'
+        currentScreen === 'entregadorLogin' ||
+        currentScreen === 'alterarSenha' ||
+        currentScreen === 'adminLogin'
       ) {
         handleLogout();
         return true; // Intercepta o evento
       }
 
-      // Se estiver na tela de pedidosList, volta para home
-      if (currentScreen === 'pedidosList') {
-        setCurrentScreen('home');
-        resetAllStates();
-        return true; // Intercepta o evento
-      }
-
-      // Se estiver na tela de pedidoDetail, volta para pedidosList
-      if (currentScreen === 'pedidoDetail') {
-        setCurrentScreen('pedidosList');
-        setSelectedPedido(null);
-        return true; // Intercepta o evento
-      }
-
-      // Se estiver na tela de entregadoresList, volta para home
-      if (currentScreen === 'entregadoresList') {
-        setCurrentScreen('home');
-        resetAllStates();
-        return true; // Intercepta o evento
-      }
-
-      // Para outras telas, usa o goBack normal
-      setCurrentScreen(previousScreen);
-      if (previousScreen === 'home' || previousScreen === 'clienteHome' || previousScreen === 'publicTracking' || previousScreen === 'entregadorHome' || previousScreen === 'clienteMenu') {
-        resetAllStates();
-      }
+      // Para todas as outras telas, usa o goBack normal
+      // Isso garante que sempre volta para a tela anterior
+      goBack();
       return true; // Intercepta o evento
     });
 
     return () => backHandler.remove();
-  }, [currentScreen, previousScreen, handleLogout]);
+  }, [currentScreen, previousScreen, profile, handleLogout]);
 
   // ========== Funções de navegação Admin ==========
   const openPedidosList = () => {
@@ -390,11 +416,13 @@ export default function App() {
     setCurrentScreen('entregadorPedidoDetail');
   };
 
-  const renderScreenHeader = (title: string, showLogout = false) => (
+  const renderScreenHeader = (title: string, showLogout = false, showBackArrow = true) => (
     <View style={homeStyles.screenHeader}>
-      <TouchableOpacity onPress={goBack} style={homeStyles.backButton}>
-        <Text style={homeStyles.backButtonText}>←</Text>
-      </TouchableOpacity>
+      {showBackArrow && (
+        <TouchableOpacity onPress={goBack} style={homeStyles.backButton}>
+          <Text style={homeStyles.backButtonText}>←</Text>
+        </TouchableOpacity>
+      )}
       <Text style={homeStyles.screenTitle}>{title}</Text>
       {showLogout && (
         <TouchableOpacity onPress={handleLogout} style={{ marginLeft: 'auto', padding: 10 }}>
@@ -420,16 +448,19 @@ export default function App() {
       return (
         <View style={{ flex: 1 }}>
           <StatusBar style="auto" />
-          <View style={homeStyles.screenHeader}>
-            <Text style={homeStyles.screenTitle}>Área do Cliente</Text>
-            <TouchableOpacity onPress={handleLogout} style={{ marginLeft: 'auto', padding: 10 }}>
-              <Text style={{ color: '#110975', fontSize: 14, fontWeight: '600' }}>Sair</Text>
-            </TouchableOpacity>
+          <View style={{ flex: 1, backgroundColor: '#f5f5f5' }}>
+            <View style={{ alignItems: 'center', marginTop: 60, marginBottom: 20 }}>
+              <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#333', marginBottom: 10 }}>👤 Área do Cliente</Text>
+              <TouchableOpacity onPress={handleLogout} style={{ padding: 10 }}>
+                <Text style={{ color: '#110975', fontSize: 14, fontWeight: '600' }}>Sair</Text>
+              </TouchableOpacity>
+            </View>
+            <ClienteMenuScreen
+              onSolicitarPedido={openClienteSolicitarPedido}
+              onRastrearPedido={openClienteRastrearPedido}
+              showHeader={false}
+            />
           </View>
-          <ClienteMenuScreen
-            onSolicitarPedido={openClienteSolicitarPedido}
-            onRastrearPedido={openClienteRastrearPedido}
-          />
         </View>
       );
     }
@@ -472,17 +503,31 @@ export default function App() {
       );
     }
 
+    if (currentScreen === 'alterarSenha' && entregadorId) {
+      return (
+        <View style={{ flex: 1 }}>
+          <StatusBar style="auto" />
+          <AlterarSenhaScreen
+            entregadorId={entregadorId}
+            onSenhaAlterada={handleSenhaAlterada}
+          />
+        </View>
+      );
+    }
+
     if (entregadorId && currentScreen === 'entregadorHome') {
       return (
         <View style={{ flex: 1 }}>
           <StatusBar style="auto" />
-          <View style={homeStyles.screenHeader}>
-            <Text style={homeStyles.screenTitle}>Minhas Entregas</Text>
-            <TouchableOpacity onPress={handleLogout} style={{ marginLeft: 'auto', padding: 10 }}>
-              <Text style={{ color: '#110975', fontSize: 14, fontWeight: '600' }}>Sair</Text>
-            </TouchableOpacity>
+          <View style={{ flex: 1, backgroundColor: '#f5f5f5' }}>
+            <View style={{ alignItems: 'center', marginTop: 60, marginBottom: 20 }}>
+              <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#333', marginBottom: 10 }}>🚚 Minhas Entregas</Text>
+              <TouchableOpacity onPress={handleLogout} style={{ padding: 10 }}>
+                <Text style={{ color: '#110975', fontSize: 14, fontWeight: '600' }}>Sair</Text>
+              </TouchableOpacity>
+            </View>
+            <EntregadorHomeScreen entregadorId={entregadorId} onSelectPedido={handleEntregadorSelectPedido} showHeader={false} />
           </View>
-          <EntregadorHomeScreen entregadorId={entregadorId} onSelectPedido={handleEntregadorSelectPedido} />
         </View>
       );
     }
@@ -491,7 +536,7 @@ export default function App() {
       return (
         <View style={{ flex: 1 }}>
           <StatusBar style="auto" />
-          {renderScreenHeader(`Pedido #${selectedPedido.id}`, true)}
+          {renderScreenHeader(`Pedido #${selectedPedido.id}`, true, false)}
           <EntregadorPedidoDetailScreen pedido={selectedPedido} onBack={goBack} />
         </View>
       );
@@ -499,125 +544,149 @@ export default function App() {
   }
 
   // ========== Telas do Perfil Admin ==========
-  if (currentScreen === 'pedidosList') {
-    return (
-      <View style={{ flex: 1 }}>
-        {renderScreenHeader('Solicitações de Pedidos', true)}
-        <PedidosListScreen onSelectPedido={handleSelectPedido} />
-      </View>
-    );
-  }
+  if (profile === 'admin') {
+    // Tela de login do admin
+    if (currentScreen === 'adminLogin' || !adminLoggedIn) {
+      return (
+        <View style={{ flex: 1 }}>
+          <StatusBar style="auto" />
+          <AdminLoginScreen
+            onLoginSuccess={handleAdminLoginSuccess}
+            onBack={handleLogout}
+          />
+        </View>
+      );
+    }
 
-  if (currentScreen === 'pedidoForm') {
-    return (
-      <View style={{ flex: 1 }}>
-        {renderScreenHeader(editingPedido ? 'Editar Pedido' : 'Novo Pedido', true)}
-        <PedidoFormScreen pedido={editingPedido || undefined} onSave={handleSavePedido} onCancel={goBack} />
-      </View>
-    );
-  }
+    // Todas as outras telas do admin (só acessa se estiver logado)
+    if (currentScreen === 'pedidosList') {
+      return (
+        <View style={{ flex: 1 }}>
+          {renderScreenHeader('Solicitações de Pedidos', true)}
+          <PedidosListScreen onSelectPedido={handleSelectPedido} />
+        </View>
+      );
+    }
+
+    if (currentScreen === 'pedidoForm') {
+      return (
+        <View style={{ flex: 1, backgroundColor: '#f5f5f5' }}>
+          <StatusBar style="auto" />
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15, paddingTop: 20, backgroundColor: '#f5f5f5' }}>
+            <TouchableOpacity onPress={goBack} style={homeStyles.backButton}>
+              <Text style={homeStyles.backButtonText}>←</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleLogout} style={{ padding: 10 }}>
+              <Text style={{ color: '#110975', fontSize: 14, fontWeight: '600' }}>Sair</Text>
+            </TouchableOpacity>
+          </View>
+          <PedidoFormScreen pedido={editingPedido || undefined} onSave={handleSavePedido} onCancel={goBack} />
+        </View>
+      );
+    }
 
   if (currentScreen === 'pedidoDetail' && selectedPedido) {
     return (
       <View style={{ flex: 1 }}>
-        {renderScreenHeader(`Pedido #${selectedPedido.id}`, true)}
+        {renderScreenHeader(`Pedido #${selectedPedido.id}`, true, false)}
         <PedidoDetailScreen pedidoId={selectedPedido.id} onDelete={handleDeletePedido} onBack={goBack} />
       </View>
     );
   }
 
-  if (currentScreen === 'entregadoresList') {
-    return (
-      <View style={{ flex: 1 }}>
-        {renderScreenHeader('Entregadores', true)}
-        <EntregadoresListScreen onSelectEntregador={handleSelectEntregador} onAddEntregador={openNewEntregador} refreshTrigger={refreshEntregadores} />
-      </View>
-    );
-  }
+    if (currentScreen === 'entregadoresList') {
+      return (
+        <View style={{ flex: 1 }}>
+          {renderScreenHeader('Entregadores', true)}
+          <EntregadoresListScreen onSelectEntregador={handleSelectEntregador} onAddEntregador={openNewEntregador} refreshTrigger={refreshEntregadores} />
+        </View>
+      );
+    }
 
-  if (currentScreen === 'entregadorForm') {
-    return (
-      <View style={{ flex: 1 }}>
-        {renderScreenHeader(editingEntregador ? 'Editar Entregador' : 'Novo Entregador', true)}
-        <EntregadorFormScreen entregador={editingEntregador || undefined} onSave={handleSaveEntregador} onCancel={goBack} />
-      </View>
-    );
-  }
+    if (currentScreen === 'entregadorForm') {
+      return (
+        <View style={{ flex: 1 }}>
+          {renderScreenHeader(editingEntregador ? 'Editar Entregador' : 'Novo Entregador', true)}
+          <EntregadorFormScreen entregador={editingEntregador || undefined} onSave={handleSaveEntregador} onCancel={goBack} />
+        </View>
+      );
+    }
 
-  if (currentScreen === 'entregadorDetail' && selectedEntregador) {
-    return (
-      <View style={{ flex: 1 }}>
-        {renderScreenHeader(`Entregador: ${selectedEntregador.nome}`, true)}
-        <EntregadorDetailScreen entregadorId={selectedEntregador.id} onEdit={handleEditEntregador} onDelete={handleDeleteEntregador} onBack={goBack} />
-      </View>
-    );
-  }
+    if (currentScreen === 'entregadorDetail' && selectedEntregador) {
+      return (
+        <View style={{ flex: 1 }}>
+          {renderScreenHeader(`Entregador: ${selectedEntregador.nome}`, true, false)}
+          <EntregadorDetailScreen entregadorId={selectedEntregador.id} onEdit={handleEditEntregador} onDelete={handleDeleteEntregador} onBack={goBack} />
+        </View>
+      );
+    }
 
-  if (currentScreen === 'veiculosList') {
-    return (
-      <View style={{ flex: 1 }}>
-        {renderScreenHeader('Veículos', true)}
-        <VeiculosListScreen onSelectVeiculo={handleSelectVeiculo} />
-      </View>
-    );
-  }
+    if (currentScreen === 'veiculosList') {
+      return (
+        <View style={{ flex: 1 }}>
+          {renderScreenHeader('Veículos', true)}
+          <VeiculosListScreen onSelectVeiculo={handleSelectVeiculo} />
+        </View>
+      );
+    }
 
-  if (currentScreen === 'veiculoForm') {
-    return (
-      <View style={{ flex: 1 }}>
-        {renderScreenHeader(editingVeiculo ? 'Editar Veículo' : 'Novo Veículo', true)}
-        <VeiculoFormScreen veiculo={editingVeiculo || undefined} onSave={handleSaveVeiculo} onCancel={goBack} />
-      </View>
-    );
-  }
+    if (currentScreen === 'veiculoForm') {
+      return (
+        <View style={{ flex: 1 }}>
+          {renderScreenHeader(editingVeiculo ? 'Editar Veículo' : 'Novo Veículo', true)}
+          <VeiculoFormScreen veiculo={editingVeiculo || undefined} onSave={handleSaveVeiculo} onCancel={goBack} />
+        </View>
+      );
+    }
 
-  if (currentScreen === 'veiculoDetail' && selectedVeiculo) {
-    return (
-      <View style={{ flex: 1 }}>
-        {renderScreenHeader(`Veículo: ${selectedVeiculo.placa} - ${selectedVeiculo.marca} ${selectedVeiculo.modelo}`, true)}
-        <VeiculoDetailScreen veiculoId={selectedVeiculo.id} onEdit={handleEditVeiculo} onDelete={handleDeleteVeiculo} onBack={goBack} />
-      </View>
-    );
-  }
+    if (currentScreen === 'veiculoDetail' && selectedVeiculo) {
+      return (
+        <View style={{ flex: 1 }}>
+          {renderScreenHeader(`Veículo: ${selectedVeiculo.placa} - ${selectedVeiculo.marca} ${selectedVeiculo.modelo}`, true)}
+          <VeiculoDetailScreen veiculoId={selectedVeiculo.id} onEdit={handleEditVeiculo} onDelete={handleDeleteVeiculo} onBack={goBack} />
+        </View>
+      );
+    }
 
-  if (currentScreen === 'rotasList') {
-    return (
-      <View style={{ flex: 1 }}>
-        {renderScreenHeader('Rotas', true)}
-        <RotasListScreen onSelectRota={handleSelectRota} />
-      </View>
-    );
-  }
+    if (currentScreen === 'rotasList') {
+      return (
+        <View style={{ flex: 1 }}>
+          {renderScreenHeader('Rotas', true)}
+          <RotasListScreen onSelectRota={handleSelectRota} />
+        </View>
+      );
+    }
 
-  if (currentScreen === 'rotaForm') {
-    return (
-      <View style={{ flex: 1 }}>
-        {renderScreenHeader(editingRota ? 'Editar Rota' : 'Nova Rota', true)}
-        <RotaFormScreen rota={editingRota || undefined} onSave={handleSaveRota} onCancel={goBack} />
-      </View>
-    );
-  }
+    if (currentScreen === 'rotaForm') {
+      return (
+        <View style={{ flex: 1 }}>
+          {renderScreenHeader(editingRota ? 'Editar Rota' : 'Nova Rota', true)}
+          <RotaFormScreen rota={editingRota || undefined} onSave={handleSaveRota} onCancel={goBack} />
+        </View>
+      );
+    }
 
-  if (currentScreen === 'rotaDetail' && selectedRota) {
-    return (
-      <View style={{ flex: 1 }}>
-        {renderScreenHeader(`Rota: ${selectedRota.nome}`, true)}
-        <RotaDetailScreen rotaId={selectedRota.id} onEdit={handleEditRota} onDelete={handleDeleteRota} onBack={goBack} />
-      </View>
-    );
-  }
+    if (currentScreen === 'rotaDetail' && selectedRota) {
+      return (
+        <View style={{ flex: 1 }}>
+          {renderScreenHeader(`Rota: ${selectedRota.nome}`, true)}
+          <RotaDetailScreen rotaId={selectedRota.id} onEdit={handleEditRota} onDelete={handleDeleteRota} onBack={goBack} />
+        </View>
+      );
+    }
 
-  if (currentScreen === 'tracking') {
-    return (
-      <View style={{ flex: 1 }}>
-        {renderScreenHeader('Rastrear Entrega', true)}
-        <TrackingScreen />
-      </View>
-    );
-  }
+    if (currentScreen === 'tracking') {
+      return (
+        <View style={{ flex: 1 }}>
+          {renderScreenHeader('Rastrear Entrega', true)}
+          <TrackingScreen />
+        </View>
+      );
+    }
 
-  // ========== Tela inicial (home) - Perfil Administrador/Empresa ==========
-  return (
+    // ========== Tela inicial (home) - Perfil Administrador/Empresa ==========
+    if (currentScreen === 'home') {
+      return (
     <View style={homeStyles.container}>
       <StatusBar style="auto" />
       <ScrollView contentContainerStyle={homeStyles.scrollContent}>
@@ -654,6 +723,16 @@ export default function App() {
 
         <DashboardStats />
       </ScrollView>
+    </View>
+      );
+    }
+  }
+
+  // Se chegou aqui, algo deu errado - volta para seleção de perfil
+  return (
+    <View style={{ flex: 1 }}>
+      <StatusBar style="auto" />
+      <ProfileSelectionScreen onSelectProfile={handleSelectProfile} />
     </View>
   );
 }
