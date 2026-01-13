@@ -1,6 +1,4 @@
 // cinfiguração de como o app vai conversar com o backend
-// fetch que já vem no React Native
-
 import { API_CONFIG } from '../constants/api';
 
 // Pega a URL do backend que configurei no outro arquivo
