@@ -1,11 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 import { Entregador } from './entregador.entity';
 import { Veiculo } from '../veiculos/veiculo.entity';
 import { Pedido } from '../pedidos/pedido.entity';
 import { CreateEntregadorDto } from './dto/create-entregador.dto';
 import { UpdateEntregadorDto } from './dto/update-entregador.dto';
+import { LoginEntregadorDto } from './dto/login-entregador.dto';
+import { AlterarSenhaDto } from './dto/alterar-senha.dto';
 
 @Injectable()
 export class EntregadoresService {
@@ -20,13 +23,59 @@ export class EntregadoresService {
   ) {}
 
   async create(data: CreateEntregadorDto): Promise<Entregador> {
+    const senhaHash = await bcrypt.hash('123123', 10);
+    const cleanCpf = data.cpf.replace(/\D/g, '');
     const entregador = this.entregadorRepo.create({
       nome: data.nome,
-      cpf: data.cpf,
+      cpf: cleanCpf,
       telefone: data.telefone,
       email: data.email,
       status: data.status,
+      senha: senhaHash,
+      temCarroProprio: data.temCarroProprio,
+      primeiroLogin: true,
     });
+    return await this.entregadorRepo.save(entregador);
+  }
+
+  async login(loginDto: LoginEntregadorDto): Promise<{ entregador: Entregador; primeiroLogin: boolean }> {
+    const cleanCpf = loginDto.cpf.replace(/\D/g, '');
+    // Busca o CPF tanto formatado quanto sem formatação
+    const entregador = await this.entregadorRepo.findOne({
+      where: [
+        { cpf: cleanCpf },
+        { cpf: loginDto.cpf },
+      ],
+      relations: ['pedidos', 'veiculos'],
+    });
+
+    if (!entregador) {
+      throw new UnauthorizedException('CPF ou senha inválidos');
+    }
+
+    const senhaValida = await bcrypt.compare(loginDto.senha, entregador.senha);
+    if (!senhaValida) {
+      throw new UnauthorizedException('CPF ou senha inválidos');
+    }
+
+    return {
+      entregador,
+      primeiroLogin: entregador.primeiroLogin,
+    };
+  }
+
+  async alterarSenha(id: number, alterarSenhaDto: AlterarSenhaDto): Promise<Entregador> {
+    const entregador = await this.findOne(id);
+
+    const senhaAtualValida = await bcrypt.compare(alterarSenhaDto.senhaAtual, entregador.senha);
+    if (!senhaAtualValida) {
+      throw new UnauthorizedException('Senha atual incorreta');
+    }
+
+    const novaSenhaHash = await bcrypt.hash(alterarSenhaDto.novaSenha, 10);
+    entregador.senha = novaSenhaHash;
+    entregador.primeiroLogin = false;
+
     return await this.entregadorRepo.save(entregador);
   }
 

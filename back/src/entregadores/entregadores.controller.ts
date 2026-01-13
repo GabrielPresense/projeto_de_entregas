@@ -11,14 +11,29 @@ import {
 import { EntregadoresService } from './entregadores.service';
 import { CreateEntregadorDto } from './dto/create-entregador.dto';
 import { UpdateEntregadorDto } from './dto/update-entregador.dto';
+import { LoginEntregadorDto } from './dto/login-entregador.dto';
+import { AlterarSenhaDto } from './dto/alterar-senha.dto';
 
 @Controller('entregadores')
 export class EntregadoresController {
   constructor(private readonly service: EntregadoresService) {}
 
+  @Post('login')
+  async login(@Body() body: LoginEntregadorDto) {
+    return await this.service.login(body);
+  }
+
   @Post()
   async create(@Body() body: CreateEntregadorDto) {
     return await this.service.create(body);
+  }
+
+  @Put(':id/alterar-senha')
+  async alterarSenha(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: AlterarSenhaDto,
+  ) {
+    return await this.service.alterarSenha(id, body);
   }
 
   @Get()
