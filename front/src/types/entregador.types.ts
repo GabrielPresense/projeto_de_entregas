@@ -15,6 +15,8 @@ export interface Entregador {
   telefone: string;   // Formato: "(11) 99999-9999" (validação no backend)
   email: string;      // Formato válido de email (validação no backend)
   status: StatusEntregador;
+  temCarroProprio: boolean;
+  primeiroLogin: boolean;
   pedidos?: Array<{
     id: number;
     descricao: string;
@@ -34,11 +36,12 @@ export interface Entregador {
 
 // Para criar um novo entregador
 export interface CreateEntregadorDto {
-  nome: string;                    
-  cpf: string;                     
-  telefone: string;               
-  email: string;                   
+  nome: string;
+  cpf: string;
+  telefone: string;
+  email: string;
   status?: StatusEntregador;
+  temCarroProprio: boolean;
 }
 
 // Para atualizar um entregador
@@ -49,5 +52,6 @@ export interface UpdateEntregadorDto {
   telefone?: string;
   email?: string;
   status?: StatusEntregador;
+  temCarroProprio?: boolean;
 }
 
