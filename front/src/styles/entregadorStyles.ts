@@ -7,6 +7,14 @@ export const entregadorStyles = StyleSheet.create({
   ...commonStyles,
 
   // ========== Estilos Específicos de Entregadores ==========
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+  },
   cardVeiculos: {
     fontSize: 12,
     color: '#666',
