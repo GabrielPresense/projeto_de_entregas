@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Switch,
 } from 'react-native';
 import { entregadoresService } from '../../services/entregadores.service';
 import {
@@ -39,6 +40,7 @@ export default function EntregadorFormScreen({
     telefone: entregador?.telefone || '',
     email: entregador?.email || '',
     status: entregador?.status || StatusEntregador.DISPONIVEL,
+    temCarroProprio: entregador?.temCarroProprio ?? false,
   });
 
   const handleSave = async () => {
@@ -70,6 +72,7 @@ export default function EntregadorFormScreen({
           telefone: formData.telefone,
           email: formData.email,
           status: formData.status,
+          temCarroProprio: formData.temCarroProprio,
         };
         savedEntregador = await entregadoresService.update(
           entregador.id,
@@ -104,7 +107,7 @@ export default function EntregadorFormScreen({
         <View style={styles.formContainer}>
           <View style={styles.headerSection}>
             <Text style={styles.stepTitle}>
-              {entregador ? '✏️ Editar Entregador' : '👤 Novo Entregador'}
+              {entregador ? '✏️ Editar Entregador' : 'Novo Entregador'}
             </Text>
             <Text style={styles.stepSubtitle}>
               {entregador
@@ -155,7 +158,7 @@ export default function EntregadorFormScreen({
                 onChangeText={(text) =>
                   setFormData({ ...formData, telefone: text })
                 }
-                placeholder="Ex: (11) 99999-9999"
+                placeholder="Ex: (44) 99999-9999"
                 keyboardType="phone-pad"
               />
             </View>
@@ -171,6 +174,25 @@ export default function EntregadorFormScreen({
                 placeholder="Ex: joao@email.com"
                 keyboardType="email-address"
                 autoCapitalize="none"
+              />
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionIcon}>🚗</Text>
+              <Text style={styles.sectionTitle}>Veículo</Text>
+            </View>
+
+            <View style={[commonStyles.form.field, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
+              <Text style={[commonStyles.form.label, { flex: 1 }]}>Tem carro próprio?</Text>
+              <Switch
+                value={formData.temCarroProprio}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, temCarroProprio: value })
+                }
+                trackColor={{ false: '#ccc', true: '#34C759' }}
+                thumbColor="#fff"
               />
             </View>
           </View>
