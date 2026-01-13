@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, Dimensions } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
 import { clienteTrackingStyles as styles } from '../../styles/clienteTrackingStyles';
 import { pedidosService } from '../../services/pedidos.service';
 import { trackingService } from '../../services/tracking.service';
 import { Pedido, StatusPedido } from '../../types/pedido.types';
 import { commonStyles } from '../../styles/commonStyles';
+
+const { width, height } = Dimensions.get('window');
 
 interface Props {
   pedido: Pedido;
@@ -19,7 +22,20 @@ export default function ClienteTrackingScreen({ pedido: initialPedido, onBack }:
   useEffect(() => {
     // Conecta ao tracking quando a tela carrega
     if (pedido) {
-      trackingService.joinTracking(pedido.id);
+      trackingService.connect();
+      trackingService.joinTracking(pedido.id, {
+        onLocationUpdate: (data) => {
+          setLocation({
+            lat: data.latitude,
+            lng: data.longitude,
+            timestamp: data.timestamp,
+          });
+        },
+        onStatusChange: async (data) => {
+          const updated = await pedidosService.getById(data.pedidoId);
+          setPedido(updated);
+        },
+      });
       loadPedidoStatus();
     }
 
@@ -125,12 +141,46 @@ export default function ClienteTrackingScreen({ pedido: initialPedido, onBack }:
 
         {location && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>📍 Localização Atual</Text>
-            <View style={styles.locationBox}>
-              <Text style={styles.locationText}>Lat: {location.lat.toFixed(6)}</Text>
-              <Text style={styles.locationText}>Lng: {location.lng.toFixed(6)}</Text>
-              {location.timestamp && <Text style={styles.timestampText}>Atualizado: {new Date(location.timestamp).toLocaleString('pt-BR')}</Text>}
+            <Text style={styles.sectionTitle}>📍 Localização do Entregador</Text>
+            <View style={{ height: 300, width: '100%', borderRadius: 10, overflow: 'hidden', marginTop: 10 }}>
+              <MapView
+                key={`map-${location.lat}-${location.lng}`}
+                style={{ flex: 1 }}
+                initialRegion={{
+                  latitude: location.lat,
+                  longitude: location.lng,
+                  latitudeDelta: 0.01,
+                  longitudeDelta: 0.01,
+                }}
+                region={{
+                  latitude: location.lat,
+                  longitude: location.lng,
+                  latitudeDelta: 0.01,
+                  longitudeDelta: 0.01,
+                }}
+                showsUserLocation={false}
+                showsMyLocationButton={false}
+              >
+                <Marker
+                  key={`marker-${location.lat}-${location.lng}`}
+                  coordinate={{
+                    latitude: location.lat,
+                    longitude: location.lng,
+                  }}
+                  title="Entregador"
+                  description={location.timestamp ? `Atualizado: ${new Date(location.timestamp).toLocaleString('pt-BR')}` : 'Localização do entregador'}
+                >
+                  <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={{ fontSize: 30 }}>🚗</Text>
+                  </View>
+                </Marker>
+              </MapView>
             </View>
+            {location.timestamp && (
+              <Text style={{ fontSize: 12, color: '#666', marginTop: 8, textAlign: 'center' }}>
+                Atualizado: {new Date(location.timestamp).toLocaleString('pt-BR')}
+              </Text>
+            )}
           </View>
         )}
 

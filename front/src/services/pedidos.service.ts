@@ -1,12 +1,6 @@
 // Service para gerenciar pedidos
 import api from './api';
-import {
-  Pedido,
-  CreatePedidoDto,
-  UpdatePedidoDto,
-  UpdateLocationDto,
-  StatusPedido,
-} from '../types/pedido.types';
+import { Pedido, CreatePedidoDto, UpdatePedidoDto, UpdateLocationDto, StatusPedido } from '../types/pedido.types';
 
 export const pedidosService = {
   // Buscar todos os pedidos

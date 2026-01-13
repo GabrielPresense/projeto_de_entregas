@@ -1,10 +1,6 @@
 // Service para gerenciar entregadores
 import api from './api';
-import {
-  Entregador,
-  CreateEntregadorDto,
-  UpdateEntregadorDto,
-} from '../types/entregador.types';
+import { Entregador, CreateEntregadorDto, UpdateEntregadorDto } from '../types/entregador.types';
 
 export const entregadoresService = {
   // Buscar todos os entregadores

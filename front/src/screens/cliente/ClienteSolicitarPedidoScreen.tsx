@@ -437,7 +437,7 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
                       </View>
                     ) : calculatedValue ? (
                       <View style={styles.valueDisplay}>
-                        <Text style={styles.valueLabel}>💰 Valor do Frete</Text>
+                        <Text style={styles.valueLabel}>Valor do Frete</Text>
                         <Text style={styles.valueAmount}>R$ {formatCurrency(calculatedValue)}</Text>
                       </View>
                     ) : null}

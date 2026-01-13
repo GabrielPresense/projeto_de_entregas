@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, ScrollView, Dimensions } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
 import { publicTrackingStyles as styles } from '../../styles/publicTrackingStyles';
 import { pedidosService } from '../../services/pedidos.service';
 import { trackingService } from '../../services/tracking.service';
 import { Pedido, StatusPedido } from '../../types/pedido.types';
 import { commonStyles } from '../../styles/commonStyles';
+
+const { width, height } = Dimensions.get('window');
 
 interface Props {
   onBack?: () => void;
@@ -189,16 +192,49 @@ export default function PublicTrackingScreen({ }: Props) {
 
             {location && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>📍 Localização Atual</Text>
-                <View style={styles.locationBox}>
-                  <Text style={styles.locationText}>Lat: {location.lat.toFixed(6)}</Text>
-                  <Text style={styles.locationText}>Lng: {location.lng.toFixed(6)}</Text>
-                  {tracking && (
-                    <View style={styles.trackingIndicator}>
-                      <Text style={styles.trackingText}>🟢 Rastreamento ativo</Text>
-                    </View>
-                  )}
+                <Text style={styles.sectionTitle}>📍 Localização do Entregador</Text>
+                <View style={{ height: 300, width: '100%', borderRadius: 10, overflow: 'hidden', marginTop: 10 }}>
+                  <MapView
+                    key={`map-${location.lat}-${location.lng}`}
+                    style={{ flex: 1 }}
+                    initialRegion={{
+                      latitude: location.lat,
+                      longitude: location.lng,
+                      latitudeDelta: 0.01,
+                      longitudeDelta: 0.01,
+                    }}
+                    region={{
+                      latitude: location.lat,
+                      longitude: location.lng,
+                      latitudeDelta: 0.01,
+                      longitudeDelta: 0.01,
+                    }}
+                    showsUserLocation={false}
+                    showsMyLocationButton={false}
+                    onRegionChangeComplete={(region) => {
+                      // Mantém o zoom quando a localização atualiza
+                    }}
+                  >
+                    <Marker
+                      key={`marker-${location.lat}-${location.lng}`}
+                      coordinate={{
+                        latitude: location.lat,
+                        longitude: location.lng,
+                      }}
+                      title="Entregador"
+                      description={location.timestamp ? `Atualizado: ${new Date(location.timestamp).toLocaleString('pt-BR')}` : 'Localização do entregador'}
+                    >
+                      <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={{ fontSize: 30 }}>🚗</Text>
+                      </View>
+                    </Marker>
+                  </MapView>
                 </View>
+                {tracking && (
+                  <View style={styles.trackingIndicator}>
+                    <Text style={styles.trackingText}>🟢 Rastreamento ativo em tempo real</Text>
+                  </View>
+                )}
               </View>
             )}
 

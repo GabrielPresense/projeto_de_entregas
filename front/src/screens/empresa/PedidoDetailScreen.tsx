@@ -9,7 +9,9 @@ import {
   ActivityIndicator,
   Modal,
   FlatList,
+  Dimensions,
 } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
 import { pedidosService } from '../../services/pedidos.service';
 import { entregadoresService } from '../../services/entregadores.service';
 import { trackingService } from '../../services/tracking.service';
@@ -335,25 +337,48 @@ export default function PedidoDetailScreen({
             <Text style={pedidoDetailStyles.sectionTitle}>📍 Localização do Entregador</Text>
             {location ? (
               <>
-                <View style={pedidoDetailStyles.infoRow}>
-                  <Text style={pedidoDetailStyles.infoLabel}>Latitude:</Text>
-                  <Text style={pedidoDetailStyles.infoValue}>{location.lat.toFixed(6)}</Text>
-                </View>
-                <View style={pedidoDetailStyles.infoRow}>
-                  <Text style={pedidoDetailStyles.infoLabel}>Longitude:</Text>
-                  <Text style={pedidoDetailStyles.infoValue}>{location.lng.toFixed(6)}</Text>
+                <View style={{ height: 300, width: '100%', borderRadius: 10, overflow: 'hidden', marginTop: 10 }}>
+                  <MapView
+                    key={`map-${location.lat}-${location.lng}`}
+                    style={{ flex: 1 }}
+                    initialRegion={{
+                      latitude: location.lat,
+                      longitude: location.lng,
+                      latitudeDelta: 0.01,
+                      longitudeDelta: 0.01,
+                    }}
+                    region={{
+                      latitude: location.lat,
+                      longitude: location.lng,
+                      latitudeDelta: 0.01,
+                      longitudeDelta: 0.01,
+                    }}
+                    showsUserLocation={false}
+                    showsMyLocationButton={false}
+                  >
+                    <Marker
+                      key={`marker-${location.lat}-${location.lng}`}
+                      coordinate={{
+                        latitude: location.lat,
+                        longitude: location.lng,
+                      }}
+                      title="Entregador"
+                      description={location.timestamp ? `Atualizado: ${new Date(location.timestamp).toLocaleString('pt-BR')}` : 'Localização do entregador'}
+                    >
+                      <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={{ fontSize: 30 }}>🚗</Text>
+                      </View>
+                    </Marker>
+                  </MapView>
                 </View>
                 {location.timestamp && (
-                  <View style={pedidoDetailStyles.infoRow}>
-                    <Text style={pedidoDetailStyles.infoLabel}>Última atualização:</Text>
-                    <Text style={pedidoDetailStyles.infoValue}>
-                      {new Date(location.timestamp).toLocaleString('pt-BR')}
-                    </Text>
-                  </View>
+                  <Text style={{ fontSize: 12, color: '#666', marginTop: 8, textAlign: 'center' }}>
+                    Atualizado: {new Date(location.timestamp).toLocaleString('pt-BR')}
+                  </Text>
                 )}
                 <View style={{ marginTop: 10, padding: 10, backgroundColor: '#f0f0f0', borderRadius: 8 }}>
                   <Text style={{ fontSize: 12, color: '#666', textAlign: 'center' }}>
-                    📍 Localização atualizada em tempo real
+                    🟢 Localização atualizada em tempo real
                   </Text>
                 </View>
               </>

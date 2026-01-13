@@ -56,7 +56,7 @@ export default function PedidoFormScreen({ pedido, onSave, onCancel }: Props) {
   const [entregadores, setEntregadores] = useState<Entregador[]>([]);
   const [loadingEntregadores, setLoadingEntregadores] = useState(false);
   const [selectedEntregador, setSelectedEntregador] = useState<Entregador | null>(
-    pedido?.entregador || null
+    (pedido?.entregador as Entregador) || null
   );
 
   // Calcula o valor automaticamente quando os endereços são preenchidos
@@ -414,7 +414,7 @@ export default function PedidoFormScreen({ pedido, onSave, onCancel }: Props) {
                   {formatCurrency(calculatedValue)}
                 </Text>
                 {calculatedDistance !== null && (
-                  <Text style={styles.summarySubtext}>
+                  <Text style={styles.summaryText}>
                     Distância: {calculatedDistance.toFixed(2)} km
                   </Text>
                 )}
@@ -455,7 +455,7 @@ export default function PedidoFormScreen({ pedido, onSave, onCancel }: Props) {
           <View style={styles.buttonsContainer}>
             {onCancel && (
               <TouchableOpacity
-                style={[styles.cancelButton, loading && { opacity: 0.6 }]}
+                style={[styles.button, styles.cancelButton]}
                 onPress={onCancel}
                 disabled={loading}
               >
@@ -464,7 +464,7 @@ export default function PedidoFormScreen({ pedido, onSave, onCancel }: Props) {
             )}
 
             <TouchableOpacity
-              style={[styles.continueButton, loading && { opacity: 0.6 }]}
+              style={[styles.button, styles.continueButton]}
               onPress={handleSave}
               disabled={loading || calculating}
             >

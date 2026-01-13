@@ -39,6 +39,15 @@ export class Entregador {
   })
   status!: StatusEntregador;
 
+  @Column({ type: 'varchar', length: 255 })
+  senha!: string;
+
+  @Column({ type: 'boolean', default: false })
+  temCarroProprio!: boolean;
+
+  @Column({ type: 'boolean', default: true })
+  primeiroLogin!: boolean;
+
   @OneToMany(() => Pedido, (pedido) => pedido.entregador)
   pedidos!: Pedido[];
 
