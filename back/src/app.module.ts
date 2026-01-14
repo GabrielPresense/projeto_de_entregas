@@ -21,16 +21,12 @@ import { TrackingModule } from './tracking/tracking.module';
         // Lê todas as variáveis de ambiente disponíveis
         const dbSynchronize = process.env.DB_SYNCHRONIZE;
         const nodeEnv = process.env.NODE_ENV;
-        
-        // TEMPORÁRIO: Habilita synchronize sempre para criar as tabelas
-        // TODO: Depois de criar as tabelas, desabilitar novamente por segurança
-        // Desabilite mudando para: const shouldSynchronize = dbSynchronize === 'true' || nodeEnv !== 'production';
-        const shouldSynchronize = true; // TEMPORÁRIO - criar tabelas
+        const shouldSynchronize = dbSynchronize === 'true' || nodeEnv !== 'production';
         
         // Log para debug
         console.log('🔍 DB_SYNCHRONIZE:', dbSynchronize);
         console.log('🔍 NODE_ENV:', nodeEnv);
-        console.log('🔍 synchronize será:', shouldSynchronize, '(TEMPORÁRIO: sempre true para criar tabelas)');
+        console.log('🔍 synchronize será:', shouldSynchronize);
         console.log('🔍 Todas as variáveis DB_*:', {
           DB_HOST: process.env.DB_HOST ? '***' : undefined,
           DB_PORT: process.env.DB_PORT,
@@ -47,8 +43,6 @@ import { TrackingModule } from './tracking/tracking.module';
           password: process.env.DB_PASS || '15789',
           database: process.env.DB_NAME || 'base_de_dados',
           autoLoadEntities: true,
-          // TEMPORÁRIO: synchronize sempre true para criar as tabelas
-          // Depois de criar, desabilitar novamente por segurança
           synchronize: shouldSynchronize,
           logging: shouldSynchronize ? ['schema', 'error', 'warn', 'info'] : false,
         };
