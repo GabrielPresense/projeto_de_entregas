@@ -728,7 +728,7 @@ export default function App() {
     }
   }
 
-  // Se chegou aqui, algo deu errado - volta para seleção de perfil
+  // Se chegar aqui, algo deu errado
   return (
     <View style={{ flex: 1 }}>
       <StatusBar style="auto" />

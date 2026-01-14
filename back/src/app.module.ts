@@ -22,7 +22,9 @@ import { TrackingModule } from './tracking/tracking.module';
         password: process.env.DB_PASS || '15789',
         database: process.env.DB_NAME || 'base_de_dados',
         autoLoadEntities: true,
-        synchronize: process.env.NODE_ENV !== 'production',
+        // Em produção, habilita synchronize temporariamente para criar as tabelas
+        // Depois de criar, pode desabilitar novamente por segurança
+        synchronize: process.env.DB_SYNCHRONIZE === 'true' || process.env.NODE_ENV !== 'production',
         logging: false,
       }),
     }),
