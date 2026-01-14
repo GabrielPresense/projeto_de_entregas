@@ -1,6 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { webcrypto } from 'crypto';
+
+// Garante que crypto.webcrypto está disponível globalmente para o TypeORM
+if (typeof globalThis.crypto === 'undefined') {
+  globalThis.crypto = webcrypto as any;
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
