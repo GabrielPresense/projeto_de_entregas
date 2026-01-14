@@ -1,9 +1,4 @@
-import { webcrypto } from 'crypto';
-
-if (typeof globalThis.crypto === 'undefined') {
-  globalThis.crypto = webcrypto as any;
-}
-
+import './polyfills';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
