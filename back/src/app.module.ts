@@ -18,22 +18,9 @@ import { TrackingModule } from './tracking/tracking.module';
     }),
     TypeOrmModule.forRootAsync({
       useFactory: () => {
-        // Lê todas as variáveis de ambiente disponíveis
         const dbSynchronize = process.env.DB_SYNCHRONIZE;
         const nodeEnv = process.env.NODE_ENV;
         const shouldSynchronize = dbSynchronize === 'true' || nodeEnv !== 'production';
-        
-        // Log para debug
-        console.log('🔍 DB_SYNCHRONIZE:', dbSynchronize);
-        console.log('🔍 NODE_ENV:', nodeEnv);
-        console.log('🔍 synchronize será:', shouldSynchronize);
-        console.log('🔍 Todas as variáveis DB_*:', {
-          DB_HOST: process.env.DB_HOST ? '***' : undefined,
-          DB_PORT: process.env.DB_PORT,
-          DB_USER: process.env.DB_USER ? '***' : undefined,
-          DB_NAME: process.env.DB_NAME ? '***' : undefined,
-          DB_SYNCHRONIZE: dbSynchronize,
-        });
         
         return {
           type: 'mysql',
