@@ -14,19 +14,28 @@ import { TrackingModule } from './tracking/tracking.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     TypeOrmModule.forRootAsync({
-      useFactory: () => ({
-        type: 'mysql',
-        host: process.env.DB_HOST || 'localhost',
-        port: Number(process.env.DB_PORT || 3306),
-        username: process.env.DB_USER || 'usuario',
-        password: process.env.DB_PASS || '15789',
-        database: process.env.DB_NAME || 'base_de_dados',
-        autoLoadEntities: true,
-        // Em produção, habilita synchronize temporariamente para criar as tabelas
-        // Depois de criar, pode desabilitar novamente por segurança
-        synchronize: process.env.DB_SYNCHRONIZE === 'true' || process.env.NODE_ENV !== 'production',
-        logging: false,
-      }),
+      useFactory: () => {
+        const shouldSynchronize = process.env.DB_SYNCHRONIZE === 'true' || process.env.NODE_ENV !== 'production';
+        
+        // Log para debug
+        console.log('🔍 DB_SYNCHRONIZE:', process.env.DB_SYNCHRONIZE);
+        console.log('🔍 NODE_ENV:', process.env.NODE_ENV);
+        console.log('🔍 synchronize será:', shouldSynchronize);
+        
+        return {
+          type: 'mysql',
+          host: process.env.DB_HOST || 'localhost',
+          port: Number(process.env.DB_PORT || 3306),
+          username: process.env.DB_USER || 'usuario',
+          password: process.env.DB_PASS || '15789',
+          database: process.env.DB_NAME || 'base_de_dados',
+          autoLoadEntities: true,
+          // Em produção, habilita synchronize temporariamente para criar as tabelas
+          // Depois de criar, pode desabilitar novamente por segurança
+          synchronize: shouldSynchronize,
+          logging: shouldSynchronize ? ['schema', 'error', 'warn'] : false,
+        };
+      },
     }),
     EntregadoresModule,
     VeiculosModule,
