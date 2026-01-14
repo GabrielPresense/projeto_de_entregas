@@ -18,12 +18,25 @@ import { TrackingModule } from './tracking/tracking.module';
     }),
     TypeOrmModule.forRootAsync({
       useFactory: () => {
-        const shouldSynchronize = process.env.DB_SYNCHRONIZE === 'true' || process.env.NODE_ENV !== 'production';
+        // Lê todas as variáveis de ambiente disponíveis
+        const dbSynchronize = process.env.DB_SYNCHRONIZE;
+        const nodeEnv = process.env.NODE_ENV;
+        
+        // Habilita synchronize se DB_SYNCHRONIZE=true OU se não estiver em produção
+        // Por segurança, em produção só habilita se DB_SYNCHRONIZE estiver explicitamente como 'true'
+        const shouldSynchronize = dbSynchronize === 'true' || (nodeEnv !== 'production' && dbSynchronize !== 'false');
         
         // Log para debug
-        console.log('🔍 DB_SYNCHRONIZE:', process.env.DB_SYNCHRONIZE);
-        console.log('🔍 NODE_ENV:', process.env.NODE_ENV);
+        console.log('🔍 DB_SYNCHRONIZE:', dbSynchronize);
+        console.log('🔍 NODE_ENV:', nodeEnv);
         console.log('🔍 synchronize será:', shouldSynchronize);
+        console.log('🔍 Todas as variáveis DB_*:', {
+          DB_HOST: process.env.DB_HOST ? '***' : undefined,
+          DB_PORT: process.env.DB_PORT,
+          DB_USER: process.env.DB_USER ? '***' : undefined,
+          DB_NAME: process.env.DB_NAME ? '***' : undefined,
+          DB_SYNCHRONIZE: dbSynchronize,
+        });
         
         return {
           type: 'mysql',
@@ -36,7 +49,7 @@ import { TrackingModule } from './tracking/tracking.module';
           // Em produção, habilita synchronize temporariamente para criar as tabelas
           // Depois de criar, pode desabilitar novamente por segurança
           synchronize: shouldSynchronize,
-          logging: shouldSynchronize ? ['schema', 'error', 'warn'] : false,
+          logging: shouldSynchronize ? ['schema', 'error', 'warn', 'info'] : false,
         };
       },
     }),
