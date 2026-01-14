@@ -9,4 +9,6 @@ yarn-error.log
 *.pem
 .env.local
 .env.*.local
+scripts/
+*.svg
 
