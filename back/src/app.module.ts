@@ -12,7 +12,10 @@ import { TrackingModule } from './tracking/tracking.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
+    ConfigModule.forRoot({ 
+      isGlobal: true,
+      envFilePath: process.env.NODE_ENV === 'production' ? undefined : '.env',
+    }),
     TypeOrmModule.forRootAsync({
       useFactory: () => {
         const shouldSynchronize = process.env.DB_SYNCHRONIZE === 'true' || process.env.NODE_ENV !== 'production';
