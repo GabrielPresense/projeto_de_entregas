@@ -16,8 +16,9 @@ import { pagamentosService } from '../../services/pagamentos.service';
 import { CreatePedidoDto, StatusPedido } from '../../types/pedido.types';
 import { MetodoPagamento, StatusPagamento } from '../../types/pagamento.types';
 import { commonStylesWithForm } from '../../styles/commonStyles';
-const commonStyles = commonStylesWithForm;
 import { estimateDistance, formatCurrency } from '../../services/distance.service';
+
+const commonStyles = commonStylesWithForm;
 import { buscarEnderecoPorCEP, formatarCEP, validarCEP } from '../../services/cep.service';
 import AddressAutocomplete from '../../components/AddressAutocomplete';
 import { clienteSolicitarPedidoStyles as styles } from '../../styles/clienteSolicitarPedidoStyles';
