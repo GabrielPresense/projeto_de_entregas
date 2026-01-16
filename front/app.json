@@ -30,7 +30,8 @@
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION"
       ],
-      "package": "com.gabrielpresense.front"
+      "package": "com.gabrielpresense.front",
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png"
