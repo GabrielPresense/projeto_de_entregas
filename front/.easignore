@@ -13,4 +13,6 @@ scripts/
 *.svg
 /android
 /ios
+.expo/
+.expo-shared/
 
