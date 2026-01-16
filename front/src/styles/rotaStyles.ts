@@ -7,7 +7,7 @@ export const rotaStyles = StyleSheet.create({
   ...commonStylesWithForm,
 });
 
-// Aliases para compatibilidade com importações antigas
+// Compatibilidade com importações antigas
 export const rotasListStyles = rotaStyles;
 export const rotaFormStyles = rotaStyles;
 export const rotaDetailStyles = rotaStyles;

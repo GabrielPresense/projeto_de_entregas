@@ -15,7 +15,8 @@ import { pedidosService } from '../../services/pedidos.service';
 import { pagamentosService } from '../../services/pagamentos.service';
 import { CreatePedidoDto, StatusPedido } from '../../types/pedido.types';
 import { MetodoPagamento, StatusPagamento } from '../../types/pagamento.types';
-import { commonStylesWithForm as commonStyles } from '../../styles/commonStyles';
+import { commonStylesWithForm } from '../../styles/commonStyles';
+const commonStyles = commonStylesWithForm;
 import { estimateDistance, formatCurrency } from '../../services/distance.service';
 import { buscarEnderecoPorCEP, formatarCEP, validarCEP } from '../../services/cep.service';
 import AddressAutocomplete from '../../components/AddressAutocomplete';
@@ -249,10 +250,10 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
               {/* CEP e Número - Origem */}
               <View style={styles.cepRow}>
                 <View style={styles.cepField}>
-                  <Text style={commonStyles.form.label}>CEP Origem *</Text>
+                  <Text style={commonStyles.label}>CEP Origem *</Text>
                   <View style={styles.cepInputContainer}>
                     <TextInput
-                      style={[commonStyles.form.input, styles.cepInput]}
+                      style={[commonStyles.input, styles.cepInput]}
                       value={cepOrigem}
                       onChangeText={async (text) => {
                         const formatted = formatarCEP(text);
@@ -289,9 +290,9 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
                   </View>
                 </View>
                 <View style={styles.numeroField}>
-                  <Text style={commonStyles.form.label}>Número</Text>
+                  <Text style={commonStyles.label}>Número</Text>
                   <TextInput
-                    style={[commonStyles.form.input, styles.numeroInput]}
+                    style={[commonStyles.input, styles.numeroInput]}
                     value={numeroOrigem}
                     onChangeText={(text) => {
                       setNumeroOrigem(text);
@@ -310,7 +311,7 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
                 </View>
               </View>
 
-              <View style={commonStyles.form.field}>
+              <View style={commonStyles.field}>
                 <AddressAutocomplete
                   label="Endereço Origem *"
                   value={formData.enderecoOrigem}
@@ -331,10 +332,10 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
               {/* CEP e Número - Destino */}
               <View style={styles.cepRow}>
                 <View style={styles.cepField}>
-                  <Text style={commonStyles.form.label}>CEP Destino *</Text>
+                  <Text style={commonStyles.label}>CEP Destino *</Text>
                   <View style={styles.cepInputContainer}>
                     <TextInput
-                      style={[commonStyles.form.input, styles.cepInput]}
+                      style={[commonStyles.input, styles.cepInput]}
                       value={cepDestino}
                       onChangeText={async (text) => {
                         const formatted = formatarCEP(text);
@@ -371,9 +372,9 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
                   </View>
                 </View>
                 <View style={styles.numeroField}>
-                  <Text style={commonStyles.form.label}>Número</Text>
+                  <Text style={commonStyles.label}>Número</Text>
                   <TextInput
-                    style={[commonStyles.form.input, styles.numeroInput]}
+                    style={[commonStyles.input, styles.numeroInput]}
                     value={numeroDestino}
                     onChangeText={(text) => {
                       setNumeroDestino(text);
@@ -392,7 +393,7 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
                 </View>
               </View>
 
-              <View style={commonStyles.form.field}>
+              <View style={commonStyles.field}>
                 <AddressAutocomplete
                   label="Endereço Destino *"
                   value={formData.enderecoDestino}
@@ -410,13 +411,13 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
                 />
               </View>
 
-              <View style={commonStyles.form.field}>
+              <View style={commonStyles.field}>
                 <View style={styles.labelContainer}>
-                  <Text style={commonStyles.form.label}>Descrição</Text>
+                  <Text style={commonStyles.label}>Descrição</Text>
                   <Text style={styles.helperText}>Descreva o que será entregue</Text>
                 </View>
                 <TextInput
-                  style={[commonStyles.form.input, styles.textArea]}
+                  style={[commonStyles.input, styles.textArea]}
                   value={formData.descricao}
                   onChangeText={(text) => setFormData({ ...formData, descricao: text })}
                   placeholder="Ex: Entrega de medicamentos, documentos, encomenda..."
@@ -428,7 +429,7 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
 
               {/* Mostra o valor do frete apenas quando os endereços estão preenchidos */}
               {(formData.enderecoOrigem.trim() && formData.enderecoDestino.trim()) && (
-                <View style={commonStyles.form.field}>
+                <View style={commonStyles.field}>
                   <View style={styles.freightValueContainer}>
                     {calculating ? (
                       <View style={styles.calculatingContainer}>
@@ -599,18 +600,18 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
                   </Text>
                 </View>
 
-                <View style={[commonStyles.form.buttons, { padding: 20, paddingTop: 0 }]}>
+                <View style={[commonStyles.buttons, { padding: 20, paddingTop: 0 }]}>
                   <TouchableOpacity
-                    style={[commonStyles.form.formButton, commonStyles.form.cancelButton]}
+                    style={[commonStyles.formButton, commonStyles.cancelButton]}
                     onPress={() => setStep('form')}
                     disabled={loading}
                   >
-                    <Text style={commonStyles.form.cancelButtonText}>Voltar</Text>
+                    <Text style={commonStyles.cancelButtonText}>Voltar</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[
-                      commonStyles.form.formButton,
-                      commonStyles.form.saveButton,
+                      commonStyles.formButton,
+                      commonStyles.saveButton,
                       loading && styles.buttonDisabled,
                     ]}
                     onPress={handlePaymentConfirm}
@@ -619,7 +620,7 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
                     {loading ? (
                       <ActivityIndicator color="#fff" />
                     ) : (
-                      <Text style={commonStyles.form.saveButtonText}>
+                      <Text style={commonStyles.saveButtonText}>
                         {paymentConfirmed ? 'Gerando QR Code...' : 'Gerar QR Code PIX'}
                       </Text>
                     )}
