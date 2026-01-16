@@ -4,7 +4,9 @@ const API_URLS = {
   production: 'https://perceptive-charisma-production-61fc.up.railway.app',
 };
 
-const isProduction = __DEV__ === false;
+// Verifica se está em produção de forma segura
+// __DEV__ pode não estar definido durante o build
+const isProduction = typeof __DEV__ !== 'undefined' ? __DEV__ === false : process.env.NODE_ENV === 'production';
 
 export const API_CONFIG = {
   BASE_URL: isProduction ? API_URLS.production : API_URLS.development,
