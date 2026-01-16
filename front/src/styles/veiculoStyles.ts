@@ -1,10 +1,10 @@
 import { StyleSheet } from 'react-native';
-import { commonStyles } from './commonStyles';
+import { commonStyles, commonStylesWithForm } from './commonStyles';
 
 // Estilos específicos para Veículos + estilos compartilhados
 export const veiculoStyles = StyleSheet.create({
-  // Herda todos os estilos comuns
-  ...commonStyles,
+  // Herda todos os estilos comuns incluindo form
+  ...commonStylesWithForm,
 });
 
 // Aliases para compatibilidade com importações antigas

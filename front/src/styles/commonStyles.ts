@@ -225,11 +225,11 @@ export const commonStyles = StyleSheet.create({
   },
 });
 
-// Exporta commonStyles com formStyles incluído
-export const commonStylesWithForm = {
+// Exporta commonStyles com formStyles incluído diretamente
+export const commonStylesWithForm = StyleSheet.create({
   ...commonStyles,
-  form: formStyles,
-};
-
-// Para compatibilidade, também adiciona ao commonStyles original
-(commonStyles as any).form = formStyles;
+  // Estilos de formulário acessíveis diretamente (espalhando formStyles)
+  ...formStyles,
+  // Mantém form como alias para padding para compatibilidade
+  form: formStyles.padding,
+});
