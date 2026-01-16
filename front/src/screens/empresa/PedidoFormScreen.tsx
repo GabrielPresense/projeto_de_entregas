@@ -227,10 +227,10 @@ export default function PedidoFormScreen({ pedido, onSave, onCancel }: Props) {
             {/* CEP e Número - Origem */}
             <View style={styles.cepRow}>
               <View style={styles.cepField}>
-                <Text style={commonStyles.form.label}>CEP Origem *</Text>
+                <Text style={commonStyles.label}>CEP Origem *</Text>
                 <View style={styles.cepInputContainer}>
                   <TextInput
-                    style={[commonStyles.form.input, styles.cepInput]}
+                    style={[commonStyles.input, styles.cepInput]}
                     value={cepOrigem}
                     onChangeText={async (text) => {
                       const formatted = formatarCEP(text);
@@ -267,9 +267,9 @@ export default function PedidoFormScreen({ pedido, onSave, onCancel }: Props) {
                 </View>
               </View>
               <View style={styles.numeroField}>
-                <Text style={commonStyles.form.label}>Número</Text>
+                <Text style={commonStyles.label}>Número</Text>
                 <TextInput
-                  style={[commonStyles.form.input, styles.numeroInput]}
+                  style={[commonStyles.input, styles.numeroInput]}
                   value={numeroOrigem}
                   onChangeText={(text) => {
                     setNumeroOrigem(text);
@@ -288,7 +288,7 @@ export default function PedidoFormScreen({ pedido, onSave, onCancel }: Props) {
               </View>
             </View>
 
-            <View style={commonStyles.form.field}>
+            <View style={commonStyles.field}>
               <AddressAutocomplete
                 label="Endereço Origem *"
                 value={formData.enderecoOrigem}
@@ -309,10 +309,10 @@ export default function PedidoFormScreen({ pedido, onSave, onCancel }: Props) {
             {/* CEP e Número - Destino */}
             <View style={styles.cepRow}>
               <View style={styles.cepField}>
-                <Text style={commonStyles.form.label}>CEP Destino *</Text>
+                <Text style={commonStyles.label}>CEP Destino *</Text>
                 <View style={styles.cepInputContainer}>
                   <TextInput
-                    style={[commonStyles.form.input, styles.cepInput]}
+                    style={[commonStyles.input, styles.cepInput]}
                     value={cepDestino}
                     onChangeText={async (text) => {
                       const formatted = formatarCEP(text);
@@ -349,9 +349,9 @@ export default function PedidoFormScreen({ pedido, onSave, onCancel }: Props) {
                 </View>
               </View>
               <View style={styles.numeroField}>
-                <Text style={commonStyles.form.label}>Número</Text>
+                <Text style={commonStyles.label}>Número</Text>
                 <TextInput
-                  style={[commonStyles.form.input, styles.numeroInput]}
+                  style={[commonStyles.input, styles.numeroInput]}
                   value={numeroDestino}
                   onChangeText={(text) => {
                     setNumeroDestino(text);
@@ -370,7 +370,7 @@ export default function PedidoFormScreen({ pedido, onSave, onCancel }: Props) {
               </View>
             </View>
 
-            <View style={commonStyles.form.field}>
+            <View style={commonStyles.field}>
               <AddressAutocomplete
                 label="Endereço Destino *"
                 value={formData.enderecoDestino}
@@ -390,10 +390,10 @@ export default function PedidoFormScreen({ pedido, onSave, onCancel }: Props) {
           </View>
 
           <View style={styles.section}>
-            <View style={commonStyles.form.field}>
-              <Text style={commonStyles.form.label}>Descrição</Text>
+            <View style={commonStyles.field}>
+              <Text style={commonStyles.label}>Descrição</Text>
               <TextInput
-                style={[commonStyles.form.input, { minHeight: 80 }]}
+                style={[commonStyles.input, { minHeight: 80 }]}
                 value={formData.descricao}
                 onChangeText={(text) =>
                   setFormData({ ...formData, descricao: text })
@@ -424,11 +424,11 @@ export default function PedidoFormScreen({ pedido, onSave, onCancel }: Props) {
 
           {/* Seleção de Entregador */}
           <View style={styles.section}>
-            <View style={commonStyles.form.field}>
-              <Text style={commonStyles.form.label}>Entregador *</Text>
+            <View style={commonStyles.field}>
+              <Text style={commonStyles.label}>Entregador *</Text>
               <TouchableOpacity
                 style={[
-                  commonStyles.form.input,
+                  commonStyles.input,
                   {
                     paddingVertical: 15,
                     justifyContent: 'center',

@@ -122,20 +122,20 @@ export default function EntregadorFormScreen({
               <Text style={styles.sectionTitle}>Dados Pessoais</Text>
             </View>
 
-            <View style={commonStyles.form.field}>
-              <Text style={commonStyles.form.label}>Nome *</Text>
+            <View style={commonStyles.field}>
+              <Text style={commonStyles.label}>Nome *</Text>
               <TextInput
-                style={commonStyles.form.input}
+                style={commonStyles.input}
                 value={formData.nome}
                 onChangeText={(text) => setFormData({ ...formData, nome: text })}
                 placeholder="Ex: João Silva"
               />
             </View>
 
-            <View style={commonStyles.form.field}>
-              <Text style={commonStyles.form.label}>CPF *</Text>
+            <View style={commonStyles.field}>
+              <Text style={commonStyles.label}>CPF *</Text>
               <TextInput
-                style={commonStyles.form.input}
+                style={commonStyles.input}
                 value={formData.cpf}
                 onChangeText={(text) => setFormData({ ...formData, cpf: text })}
                 placeholder="Ex: 123.456.789-00"
@@ -150,10 +150,10 @@ export default function EntregadorFormScreen({
               <Text style={styles.sectionTitle}>Contato</Text>
             </View>
 
-            <View style={commonStyles.form.field}>
-              <Text style={commonStyles.form.label}>Telefone *</Text>
+            <View style={commonStyles.field}>
+              <Text style={commonStyles.label}>Telefone *</Text>
               <TextInput
-                style={commonStyles.form.input}
+                style={commonStyles.input}
                 value={formData.telefone}
                 onChangeText={(text) =>
                   setFormData({ ...formData, telefone: text })
@@ -163,10 +163,10 @@ export default function EntregadorFormScreen({
               />
             </View>
 
-            <View style={commonStyles.form.field}>
-              <Text style={commonStyles.form.label}>Email *</Text>
+            <View style={commonStyles.field}>
+              <Text style={commonStyles.label}>Email *</Text>
               <TextInput
-                style={commonStyles.form.input}
+                style={commonStyles.input}
                 value={formData.email}
                 onChangeText={(text) =>
                   setFormData({ ...formData, email: text })
@@ -184,8 +184,8 @@ export default function EntregadorFormScreen({
               <Text style={styles.sectionTitle}>Veículo</Text>
             </View>
 
-            <View style={[commonStyles.form.field, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
-              <Text style={[commonStyles.form.label, { flex: 1 }]}>Tem carro próprio?</Text>
+            <View style={[commonStyles.field, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
+              <Text style={[commonStyles.label, { flex: 1 }]}>Tem carro próprio?</Text>
               <Switch
                 value={formData.temCarroProprio}
                 onValueChange={(value) =>
