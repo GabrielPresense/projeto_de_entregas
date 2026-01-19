@@ -9,7 +9,7 @@ function getIsProduction(): boolean {
     return __DEV__ === false;
   }
   
-  // Fallback para process.env.NODE_ENV (pode não estar disponível durante bundling)
+  // Fallback para process.env.NODE_ENV
   if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV) {
     return process.env.NODE_ENV === 'production';
   }
