@@ -4,11 +4,7 @@ const API_URLS = {
   production: 'https://perceptive-charisma-production-61fc.up.railway.app',
 };
 
-// Determina se está em produção de forma segura
-// Durante o build, __DEV__ pode não estar definido
-// process.env também pode não estar disponível durante o bundling
 function getIsProduction(): boolean {
-  // Tenta __DEV__ primeiro (disponível em runtime)
   if (typeof __DEV__ !== 'undefined') {
     return __DEV__ === false;
   }
@@ -18,7 +14,7 @@ function getIsProduction(): boolean {
     return process.env.NODE_ENV === 'production';
   }
   
-  // Se nada estiver disponível, assume desenvolvimento (mais seguro)
+  // Se nada estiver disponível, assume desenvolvimento
   return false;
 }
 
