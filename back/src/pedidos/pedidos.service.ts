@@ -121,20 +121,18 @@ export class PedidosService {
     return { deleted: result.affected || 0 };
   }
 
-  // Deleta pedidos pendentes criados há mais de 30 minutos sem pagamento aprovado
+  // Deleta apenas pedidos pendentes criados há mais de 30 minutos que NÃO têm pagamento associado
+  // Se o pedido tem pagamento (mesmo que pendente), não deleta, pois quando pagar o status muda
   async removerPedidosPendentesExpirados(): Promise<{ deleted: number }> {
     const trintaMinutosAtras = new Date(Date.now() - 30 * 60 * 1000);
     
-    // Busca pedidos pendentes criados há mais de 30 minutos
+    // Busca pedidos pendentes criados há mais de 30 minutos que NÃO têm pagamento associado
     const pedidosExpirados = await this.pedidoRepo
       .createQueryBuilder('pedido')
-      .leftJoinAndSelect('pedido.pagamento', 'pagamento')
+      .leftJoin('pedido.pagamento', 'pagamento')
       .where('pedido.status = :status', { status: StatusPedido.PENDENTE })
       .andWhere('pedido.createdAt < :dataLimite', { dataLimite: trintaMinutosAtras })
-      .andWhere(
-        '(pagamento.id IS NULL OR pagamento.status != :statusAprovado)',
-        { statusAprovado: StatusPagamento.APROVADO }
-      )
+      .andWhere('pagamento.id IS NULL') // Apenas pedidos SEM pagamento
       .getMany();
 
     if (pedidosExpirados.length === 0) {
@@ -142,42 +140,16 @@ export class PedidosService {
     }
 
     const pedidoIds = pedidosExpirados.map(p => p.id);
-    const pagamentoIds = pedidosExpirados
-      .map(p => p.pagamento?.id)
-      .filter((id): id is number => id !== undefined);
 
-    // Usa transação para garantir consistência
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    // Deleta apenas os pedidos (não tem pagamentos para deletar)
+    const result = await this.pedidoRepo
+      .createQueryBuilder()
+      .delete()
+      .from(Pedido)
+      .where('id IN (:...ids)', { ids: pedidoIds })
+      .execute();
 
-    try {
-      // Deleta os pagamentos primeiro usando query builder (se existirem)
-      if (pagamentoIds.length > 0) {
-        await queryRunner.manager
-          .createQueryBuilder()
-          .delete()
-          .from(Pagamento)
-          .where('id IN (:...ids)', { ids: pagamentoIds })
-          .execute();
-      }
-
-      // Depois deleta os pedidos usando query builder
-      await queryRunner.manager
-        .createQueryBuilder()
-        .delete()
-        .from(Pedido)
-        .where('id IN (:...ids)', { ids: pedidoIds })
-        .execute();
-      
-      await queryRunner.commitTransaction();
-      return { deleted: pedidosExpirados.length };
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
+    return { deleted: result.affected || 0 };
   }
 
   async updateLocation(
