@@ -505,5 +505,24 @@ export const clienteSolicitarPedidoStyles = StyleSheet.create({
     lineHeight: 20,
     textAlign: 'center',
   },
+  pedidoInfoBox: {
+    backgroundColor: '#f0f0f0',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 20,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#110975',
+  },
+  pedidoInfoLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 5,
+  },
+  pedidoInfoValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#110975',
+  },
 });
 
