@@ -51,6 +51,18 @@ export class MercadoPagoService {
       this.logger.warn(
         'MERCADO_PAGO_ACCESS_TOKEN não configurado. Usando token de teste mockado.',
       );
+    } else {
+      // Verifica se é token de produção ou teste
+      const isProductionToken = configuredToken.startsWith('APP_USR-');
+      const isTestToken = configuredToken.startsWith('TEST-');
+      
+      if (isProductionToken) {
+        this.logger.log('Usando Access Token de PRODUÇÃO do Mercado Pago');
+      } else if (isTestToken) {
+        this.logger.warn('Usando Access Token de TESTE do Mercado Pago. Para pagamentos reais, use token de produção (APP_USR-).');
+      } else {
+        this.logger.warn('Formato de token não reconhecido. Verifique se está usando o token correto.');
+      }
     }
   }
 
@@ -66,12 +78,30 @@ export class MercadoPagoService {
       );
     }
     try {
-      const payload = {
+      // Validação: em produção, precisa de um email válido
+      const emailValido = emailPagador && emailPagador.includes('@') 
+        ? emailPagador 
+        : undefined;
+      
+      // Se não tiver email válido, usa um email genérico mas mais aceitável
+      // O Mercado Pago pode rejeitar 'test@test.com' em alguns casos
+      const emailFinal = emailValido || 'pagador@cliente.com';
+      
+      const payload: any = {
         transaction_amount: valor,
         description: descricao,
         payment_method_id: 'pix',
         payer: {
-          email: emailPagador || 'test@test.com',
+          email: emailFinal,
+        },
+        // Informações adicionais para melhorar a compatibilidade
+        statement_descriptor: 'ENTREGA',
+        external_reference: `pedido-${Date.now()}`,
+        // Configurações específicas do PIX
+        installments: 1,
+        // Garante que o pagamento seja processado corretamente
+        metadata: {
+          source: 'sistema-entregas',
         },
       };
 
@@ -93,6 +123,18 @@ export class MercadoPagoService {
       );
 
       this.logger.log(`Pagamento PIX criado: ${response.data.id}`);
+      this.logger.log(`Status: ${response.data.status}`);
+      
+      // Log detalhado do QR Code para debug
+      if (response.data.point_of_interaction?.transaction_data?.qr_code) {
+        const qrCode = response.data.point_of_interaction.transaction_data.qr_code;
+        const qrCodeValido = qrCode.includes('br.gov.bcb.pix');
+        this.logger.log(`QR Code gerado: ${qrCodeValido ? 'Válido (contém br.gov.bcb.pix)' : 'Inválido ou formato incorreto'}`);
+        this.logger.log(`QR Code (primeiros 50 chars): ${qrCode.substring(0, 50)}...`);
+      } else {
+        this.logger.warn('QR Code não foi retornado pelo Mercado Pago');
+      }
+      
       return response.data;
     } catch (error: any) {
       const status = error?.response?.status;

@@ -24,9 +24,12 @@ export class PagamentosController {
   }
 
   @Post(':id/processar')
-  async processar(@Param('id', ParseIntPipe) id: number) {
+  async processar(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body?: { emailPagador?: string },
+  ) {
     try {
-      return await this.service.processarPagamento(id);
+      return await this.service.processarPagamento(id, body?.emailPagador);
     } catch (error: any) {
       throw new HttpException(
         {

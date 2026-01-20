@@ -78,7 +78,7 @@ export class PagamentosService {
     }
   }
 
-  async processarPagamento(id: number): Promise<Pagamento> {
+  async processarPagamento(id: number, emailPagador?: string): Promise<Pagamento> {
     const pagamento = await this.findOne(id);
 
     if (pagamento.status === StatusPagamento.APROVADO) {
@@ -97,6 +97,7 @@ export class PagamentosService {
         const response = await this.mercadoPagoService.criarPagamentoPix(
           valor,
           descricao,
+          emailPagador,
         );
 
         // Salva tudo que o Mercado Pago retornou (QR Code, URL, etc)
