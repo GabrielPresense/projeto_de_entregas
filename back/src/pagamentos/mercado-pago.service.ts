@@ -21,10 +21,23 @@ export class MercadoPagoService {
   private readonly accessToken: string;
 
   constructor(private configService: ConfigService) {
-    // Tenta pegar o token do .env, se não tiver usa um mock só pra não quebrar
-    this.accessToken =
-      this.configService.get<string>('MERCADO_PAGO_ACCESS_TOKEN') ||
-      'TEST-1234567890123456-123456-abcdef1234567890abcdef1234567890-123456789';
+    const configuredToken =
+      this.configService.get<string>('MERCADO_PAGO_ACCESS_TOKEN');
+    const nodeEnv = this.configService.get<string>('NODE_ENV') || 'development';
+
+    // Em produção, não pode seguir com token mockado (vai dar 401/UNAUTHORIZED na API do MP)
+    if (!configuredToken && nodeEnv === 'production') {
+      this.logger.error(
+        'MERCADO_PAGO_ACCESS_TOKEN não configurado em produção. Configure a variável de ambiente no Railway.',
+      );
+      // Mantém o service inicializável, mas forçamos erro claro na primeira chamada
+      this.accessToken = '';
+    } else {
+      // Em dev/test, mantém um token mock só pra não quebrar o fluxo local
+      this.accessToken =
+        configuredToken ||
+        'TEST-1234567890123456-123456-abcdef1234567890abcdef1234567890-123456789';
+    }
 
     this.axiosInstance = axios.create({
       baseURL: 'https://api.mercadopago.com',
@@ -34,7 +47,7 @@ export class MercadoPagoService {
       },
     });
 
-    if (!this.configService.get<string>('MERCADO_PAGO_ACCESS_TOKEN')) {
+    if (!configuredToken) {
       this.logger.warn(
         'MERCADO_PAGO_ACCESS_TOKEN não configurado. Usando token de teste mockado.',
       );
@@ -47,6 +60,11 @@ export class MercadoPagoService {
     descricao: string,
     emailPagador?: string,
   ): Promise<MercadoPagoPixResponse> {
+    if (!this.accessToken) {
+      throw new Error(
+        'PIX indisponível: MERCADO_PAGO_ACCESS_TOKEN não configurado no servidor.',
+      );
+    }
     try {
       const payload = {
         transaction_amount: valor,
@@ -77,12 +95,16 @@ export class MercadoPagoService {
       this.logger.log(`Pagamento PIX criado: ${response.data.id}`);
       return response.data;
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message;
-      const errorDetails = error.response?.data;
+      const status = error?.response?.status;
+      const errorMessage = error?.response?.data?.message || error.message;
+      const errorDetails = error?.response?.data;
       
       this.logger.error(
-        `Erro ao criar pagamento PIX: ${errorMessage}`,
+        `Erro ao criar pagamento PIX: ${errorMessage} (status=${status ?? 'unknown'})`,
       );
+      if (errorDetails) {
+        this.logger.error(`Detalhes Mercado Pago: ${JSON.stringify(errorDetails)}`);
+      }
       
       // Se o erro for "user not found" ou token inválido, gera um QR Code simulado para desenvolvimento
       if (
