@@ -409,8 +409,9 @@ export default function PedidoDetailScreen({
           )}
         </View>
 
-        {/* Botão para despachar pedido confirmado */}
-        {pedido.status === StatusPedido.CONFIRMADO && (
+        {/* Botão para despachar pedido confirmado ou pendente com pagamento aprovado */}
+        {(pedido.status === StatusPedido.CONFIRMADO || 
+          (pedido.status === StatusPedido.PENDENTE && pedido.pagamento?.status === 'aprovado')) && (
           <View style={pedidoDetailStyles.actions}>
             <TouchableOpacity
               style={[pedidoDetailStyles.actionButton, pedidoDetailStyles.saveButton]}

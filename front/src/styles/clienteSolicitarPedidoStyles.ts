@@ -524,20 +524,11 @@ export const clienteSolicitarPedidoStyles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#110975',
   },
-  printInfoBox: {
-    backgroundColor: '#fff3cd',
-    borderColor: '#ffc107',
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    marginTop: 15,
-    width: '100%',
-  },
   printInfoText: {
     fontSize: 13,
-    color: '#856404',
+    color: '#666',
     textAlign: 'center',
-    fontWeight: '500',
+    marginTop: 10,
   },
 });
 

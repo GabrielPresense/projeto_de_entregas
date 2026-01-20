@@ -613,7 +613,7 @@ export default function App() {
   if (currentScreen === 'pedidoDetail' && selectedPedido) {
     return (
       <View style={{ flex: 1 }}>
-        {renderScreenHeader(`Pedido #${selectedPedido.id}`, true, false)}
+        {renderScreenHeader(`Pedido #${selectedPedido.id}`, true, true)}
         <PedidoDetailScreen pedidoId={selectedPedido.id} onBack={goBack} />
       </View>
     );

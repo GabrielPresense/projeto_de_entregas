@@ -495,11 +495,9 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
                 <View style={styles.pedidoInfoBox}>
                   <Text style={styles.pedidoInfoLabel}>Número do Pedido:</Text>
                   <Text style={styles.pedidoInfoValue}>#{pedidoId || '...'}</Text>
-                  <View style={styles.printInfoBox}>
-                    <Text style={styles.printInfoText}>
-                      📸 Tire um print desta tela para gravar o número do pedido
-                    </Text>
-                  </View>
+                  <Text style={styles.printInfoText}>
+                    Tire um print desta tela para gravar o número do pedido
+                  </Text>
                 </View>
                 <Text style={styles.qrCodeTitle}>Escaneie o QR Code ou copie o código PIX</Text>
                 
@@ -510,16 +508,7 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
                       Configure o token do Mercado Pago corretamente para gerar QR Codes válidos
                     </Text>
                   </View>
-                ) : (
-                  <View style={styles.infoBox}>
-                    <Text style={styles.infoText}>
-                      💡 Se o banco informar "instituição de destino não está funcionando":{'\n'}
-                      • Verifique se a conta do Mercado Pago tem chave PIX habilitada{'\n'}
-                      • Acesse: Mercado Pago → Sua Conta → Chaves PIX{'\n'}
-                      • Configure pelo menos uma chave PIX (CPF, Email, Telefone ou Chave Aleatória)
-                    </Text>
-                  </View>
-                )}
+                ) : null}
                 
                 <View style={styles.qrCodeWrapper}>
                   <QRCode
