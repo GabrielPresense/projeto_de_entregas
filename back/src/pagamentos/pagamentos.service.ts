@@ -171,5 +171,68 @@ export class PagamentosService {
       throw new Error('Erro ao consultar status do pagamento');
     }
   }
+
+  // Testa se o token do Mercado Pago está funcionando
+  async testarTokenMercadoPago(): Promise<{
+    sucesso: boolean;
+    tokenConfigurado: boolean;
+    ambiente: string;
+    mensagem: string;
+    detalhes?: any;
+  }> {
+    const nodeEnv = process.env.NODE_ENV || 'development';
+    const tokenConfigurado = !!process.env.MERCADO_PAGO_ACCESS_TOKEN;
+
+    if (!tokenConfigurado) {
+      return {
+        sucesso: false,
+        tokenConfigurado: false,
+        ambiente: nodeEnv,
+        mensagem: 'MERCADO_PAGO_ACCESS_TOKEN não está configurado no Railway. Configure a variável de ambiente.',
+      };
+    }
+
+    try {
+      // Tenta criar um pagamento PIX de teste (valor mínimo: R$ 0,01)
+      // Isso vai validar se o token está funcionando
+      const response = await this.mercadoPagoService.criarPagamentoPix(
+        0.01,
+        'Teste de conexão - Sistema de Entregas',
+        'teste@teste.com',
+      );
+
+      return {
+        sucesso: true,
+        tokenConfigurado: true,
+        ambiente: nodeEnv,
+        mensagem: 'Token do Mercado Pago está funcionando corretamente! ✅',
+        detalhes: {
+          paymentId: response.id,
+          status: response.status,
+          temQRCode: !!response.point_of_interaction?.transaction_data?.qr_code,
+        },
+      };
+    } catch (error: any) {
+      const status = error?.response?.status;
+      const errorMessage = error?.response?.data?.message || error.message;
+      const errorDetails = error?.response?.data;
+
+      return {
+        sucesso: false,
+        tokenConfigurado: true,
+        ambiente: nodeEnv,
+        mensagem: `Erro ao testar token: ${errorMessage}`,
+        detalhes: {
+          status,
+          error: errorDetails,
+          sugestao: status === 401 
+            ? 'Token inválido ou expirado. Verifique se está usando o Access Token correto (deve começar com APP_USR-).'
+            : status === 403
+            ? 'Token sem permissões. Verifique se a chave PIX está habilitada na sua conta do Mercado Pago.'
+            : 'Verifique os logs do backend para mais detalhes.',
+        },
+      };
+    }
+  }
 }
 

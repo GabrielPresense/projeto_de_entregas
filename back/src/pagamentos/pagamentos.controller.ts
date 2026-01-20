@@ -67,5 +67,10 @@ export class PagamentosController {
   async consultarStatus(@Param('id', ParseIntPipe) id: number) {
     return await this.service.consultarStatusPagamento(id);
   }
+
+  @Get('test/token')
+  async testarToken() {
+    return await this.service.testarTokenMercadoPago();
+  }
 }
 
