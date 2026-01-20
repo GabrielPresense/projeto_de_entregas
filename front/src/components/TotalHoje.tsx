@@ -21,7 +21,10 @@ export default function TotalHoje() {
       const pedidosHoje = pedidos.filter((pedido: Pedido) => {
         const dataPedido = new Date(pedido.createdAt);
         dataPedido.setHours(0, 0, 0, 0);
-        return dataPedido.getTime() === hoje.getTime();
+        const mesmoDia = dataPedido.getTime() === hoje.getTime();
+        // Apenas pedidos com pagamento aprovado
+        const pagamentoAprovado = pedido.pagamento?.status === 'aprovado';
+        return mesmoDia && pagamentoAprovado;
       });
       const valorTotal = pedidosHoje.reduce((total: number, p: Pedido) => {
         const valor = parseFloat(p.valor) || 0;
