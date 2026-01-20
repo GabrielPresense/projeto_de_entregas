@@ -113,12 +113,6 @@ export class PagamentosService {
         await this.pagamentoRepo.save(pagamento);
 
         return pagamento;
-      } else if (pagamento.metodoPagamento === MetodoPagamento.DINHEIRO) {
-        // Para pagamento em dinheiro, mantém como pendente até o entregador confirmar o recebimento
-        // O admin/entregador pode aprovar manualmente quando receber o pagamento
-        pagamento.status = StatusPagamento.PENDENTE;
-        await this.pagamentoRepo.save(pagamento);
-        return pagamento;
       } else {
         // Pra outros métodos (cartão, boleto) simula um processamento assíncrono
         const timer = setTimeout(async () => {
