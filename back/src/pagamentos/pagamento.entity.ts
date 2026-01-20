@@ -20,6 +20,7 @@ export enum MetodoPagamento {
   CARTAO_DEBITO = 'cartao_debito',
   PIX = 'pix',
   BOLETO = 'boleto',
+  DINHEIRO = 'dinheiro',
 }
 
 @Entity({ name: 'pagamentos' })
