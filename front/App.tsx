@@ -2,7 +2,6 @@ import { StatusBar } from 'expo-status-bar';
 import { useState, useEffect } from 'react';
 import { Text, View, TouchableOpacity, ScrollView, BackHandler, Platform } from 'react-native';
 import * as Updates from 'expo-updates';
-import * as Updates from 'expo-updates';
 import { homeStyles } from './src/styles/homeStyles';
 // Tela de seleção de perfil (compartilhada)
 import ProfileSelectionScreen from './src/screens/ProfileSelectionScreen';
