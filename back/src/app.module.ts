@@ -22,13 +22,20 @@ import { TrackingModule } from './tracking/tracking.module';
         const nodeEnv = process.env.NODE_ENV;
         const shouldSynchronize = dbSynchronize === 'true' || nodeEnv !== 'production';
         
+        // Usa variáveis DB_* se existirem, senão usa as variáveis MYSQL* do Railway
+        const host = process.env.DB_HOST || process.env.MYSQLHOST || 'localhost';
+        const port = Number(process.env.DB_PORT || process.env.MYSQLPORT || 3306);
+        const username = process.env.DB_USER || process.env.MYSQLUSER || 'usuario';
+        const password = process.env.DB_PASS || process.env.MYSQLPASSWORD || '15789';
+        const database = process.env.DB_NAME || process.env.MYSQLDATABASE || process.env.MYSQL_DATABASE || 'base_de_dados';
+        
         return {
           type: 'mysql',
-          host: process.env.DB_HOST || 'localhost',
-          port: Number(process.env.DB_PORT || 3306),
-          username: process.env.DB_USER || 'usuario',
-          password: process.env.DB_PASS || '15789',
-          database: process.env.DB_NAME || 'base_de_dados',
+          host,
+          port,
+          username,
+          password,
+          database,
           autoLoadEntities: true,
           synchronize: shouldSynchronize,
           logging: shouldSynchronize ? ['schema', 'error', 'warn', 'info'] : false,
