@@ -127,12 +127,14 @@ export class PedidosService {
     const trintaMinutosAtras = new Date(Date.now() - 30 * 60 * 1000);
     
     // Busca pedidos pendentes criados há mais de 30 minutos que NÃO têm pagamento associado
+    // Usa subquery para garantir que realmente não há pagamento na tabela pagamentos
     const pedidosExpirados = await this.pedidoRepo
       .createQueryBuilder('pedido')
-      .leftJoin('pedido.pagamento', 'pagamento')
       .where('pedido.status = :status', { status: StatusPedido.PENDENTE })
       .andWhere('pedido.createdAt < :dataLimite', { dataLimite: trintaMinutosAtras })
-      .andWhere('pagamento.id IS NULL') // Apenas pedidos SEM pagamento
+      .andWhere(
+        'NOT EXISTS (SELECT 1 FROM pagamentos WHERE pagamentos.pedidoId = pedido.id)'
+      )
       .getMany();
 
     if (pedidosExpirados.length === 0) {
