@@ -15,6 +15,7 @@ import MapView, { Marker } from 'react-native-maps';
 import { pedidosService } from '../../services/pedidos.service';
 import { entregadoresService } from '../../services/entregadores.service';
 import { trackingService } from '../../services/tracking.service';
+import { pagamentosService } from '../../services/pagamentos.service';
 import { Pedido, StatusPedido } from '../../types/pedido.types';
 import { Entregador } from '../../types/entregador.types';
 import { pedidoDetailStyles } from '../../styles/pedidoStyles';
@@ -45,6 +46,15 @@ export default function PedidoDetailScreen({
   useEffect(() => {
     loadPedido();
   }, [pedidoId]);
+
+  // Verifica automaticamente o status do pagamento quando o pedido é carregado
+  useEffect(() => {
+    if (pedido && pedido.pagamento && pedido.pagamento.status === 'pendente' && pedido.pagamento.transacaoId) {
+      // Verifica o status do pagamento automaticamente (apenas uma vez)
+      verificarStatusPagamento();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pedido?.id]);
 
   // Conecta ao tracking quando o pedido está em trânsito
   useEffect(() => {
@@ -128,6 +138,25 @@ export default function PedidoDetailScreen({
         },
       ],
     );
+  };
+
+  const verificarStatusPagamento = async () => {
+    if (!pedido?.pagamento?.id) return;
+    
+    try {
+      const pagamentoAtualizado = await pagamentosService.consultarStatus(pedido.pagamento.id);
+      
+      // Se o pagamento foi aprovado, atualiza o pedido
+      if (pagamentoAtualizado.status === 'aprovado' && pedido.status === StatusPedido.PENDENTE) {
+        await pedidosService.updateStatus(pedidoId, StatusPedido.CONFIRMADO);
+        loadPedido(); // Recarrega o pedido para atualizar a tela
+      } else if (pagamentoAtualizado.status === 'aprovado') {
+        // Se já está confirmado, apenas recarrega para atualizar o status do pagamento
+        loadPedido();
+      }
+    } catch (error) {
+      console.error('Erro ao verificar status do pagamento:', error);
+    }
   };
 
   const handleStatusChange = async (newStatus: StatusPedido) => {
@@ -408,6 +437,35 @@ export default function PedidoDetailScreen({
             </View>
           )}
         </View>
+
+        {/* Botão para verificar status do pagamento se estiver pendente */}
+        {pedido.status === StatusPedido.PENDENTE && pedido.pagamento && pedido.pagamento.status === 'pendente' && pedido.pagamento.transacaoId && (
+          <View style={pedidoDetailStyles.actions}>
+            <TouchableOpacity
+              style={[pedidoDetailStyles.actionButton, pedidoDetailStyles.saveButton]}
+              onPress={async () => {
+                try {
+                  setLoading(true);
+                  await verificarStatusPagamento();
+                  Alert.alert('Sucesso', 'Status do pagamento verificado. Se o pagamento foi aprovado, o pedido será atualizado automaticamente.');
+                } catch (error) {
+                  Alert.alert('Erro', 'Não foi possível verificar o status do pagamento.');
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={pedidoDetailStyles.actionButtonText}>
+                  Verificar Status do Pagamento
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Botão para despachar pedido confirmado ou pendente com pagamento aprovado */}
         {(pedido.status === StatusPedido.CONFIRMADO || 
