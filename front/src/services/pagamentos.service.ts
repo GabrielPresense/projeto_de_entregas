@@ -19,8 +19,14 @@ export const pagamentosService = {
     await api.delete(`/pagamentos/${id}`);
   },
   // Processa o pagamento (gera QR Code para PIX)
-  processar: async (id: number): Promise<Pagamento> => {
-    return await api.post<Pagamento>(`/pagamentos/${id}/processar`, {});
+  processar: async (id: number, emailPagador?: string): Promise<Pagamento> => {
+    return await api.post<Pagamento>(`/pagamentos/${id}/processar`, {
+      emailPagador: emailPagador || undefined,
+    });
+  },
+  // Consulta o status do pagamento no Mercado Pago
+  consultarStatus: async (id: number): Promise<Pagamento> => {
+    return await api.get<Pagamento>(`/pagamentos/${id}/status`);
   },
 };
 

@@ -340,6 +340,20 @@ export const clienteSolicitarPedidoStyles = StyleSheet.create({
     color: '#856404',
     textAlign: 'center',
   },
+  infoBox: {
+    backgroundColor: '#e7f3ff',
+    borderColor: '#2196F3',
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 15,
+    marginTop: 10,
+  },
+  infoText: {
+    fontSize: 12,
+    color: '#0d47a1',
+    lineHeight: 18,
+  },
   pixCodeContainer: {
     width: '100%',
     marginTop: 20,

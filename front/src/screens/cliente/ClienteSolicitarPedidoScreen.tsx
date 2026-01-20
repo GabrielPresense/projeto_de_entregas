@@ -501,7 +501,16 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
                       Configure o token do Mercado Pago corretamente para gerar QR Codes válidos
                     </Text>
                   </View>
-                ) : null}
+                ) : (
+                  <View style={styles.infoBox}>
+                    <Text style={styles.infoText}>
+                      💡 Se o banco informar "instituição de destino não está funcionando":{'\n'}
+                      • Verifique se a conta do Mercado Pago tem chave PIX habilitada{'\n'}
+                      • Acesse: Mercado Pago → Sua Conta → Chaves PIX{'\n'}
+                      • Configure pelo menos uma chave PIX (CPF, Email, Telefone ou Chave Aleatória)
+                    </Text>
+                  </View>
+                )}
                 
                 <View style={styles.qrCodeWrapper}>
                   <QRCode
@@ -565,19 +574,49 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
                         setLoading(false);
                       }
                     } else {
-                      // Modo de produção: apenas confirma que o pedido foi criado
-                      Alert.alert(
-                        'Pedido criado!',
-                        'Após realizar o pagamento, seu pedido será processado.',
-                        [
-                          {
-                            text: 'OK',
-                            onPress: () => {
-                              onSuccess?.(pedidoId || 0);
-                            },
-                          },
-                        ]
-                      );
+                      // Modo de produção: verifica se o pagamento foi aprovado antes de concluir
+                      try {
+                        setLoading(true);
+                        
+                        // Consulta o status do pagamento no Mercado Pago
+                        const pagamentoAtualizado = await pagamentosService.consultarStatus(pagamentoId!);
+                        
+                        // Verifica se o pagamento foi aprovado
+                        if (pagamentoAtualizado.status === StatusPagamento.APROVADO) {
+                          // Atualiza o status do pedido para CONFIRMADO
+                          await pedidosService.updateStatus(pedidoId!, StatusPedido.CONFIRMADO);
+                          
+                          Alert.alert(
+                            'Pagamento confirmado!',
+                            'Seu pagamento foi aprovado e o pedido foi enviado para a empresa.',
+                            [
+                              {
+                                text: 'OK',
+                                onPress: () => {
+                                  onSuccess?.(pedidoId!);
+                                },
+                              },
+                            ]
+                          );
+                        } else {
+                          // Pagamento ainda não foi aprovado
+                          Alert.alert(
+                            'Erro',
+                            'Sua transferência não foi concluída. Verifique se o pagamento PIX foi realizado corretamente e aguarde alguns segundos antes de tentar novamente.',
+                            [{ text: 'OK' }]
+                          );
+                        }
+                      } catch (error) {
+                        const errorMessage = error instanceof Error ? error.message : 'Erro ao verificar pagamento';
+                        Alert.alert(
+                          'Erro',
+                          errorMessage.includes('transferência') || errorMessage.includes('concluída')
+                            ? errorMessage
+                            : 'Não foi possível verificar o status do pagamento. Verifique sua conexão e tente novamente.'
+                        );
+                      } finally {
+                        setLoading(false);
+                      }
                     }
                   }}
                   disabled={loading}
