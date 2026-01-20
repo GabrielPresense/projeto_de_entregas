@@ -1,9 +1,10 @@
-import { Injectable, NotFoundException, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject, forwardRef, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Pedido, StatusPedido } from './pedido.entity';
 import { Entregador } from '../entregadores/entregador.entity';
 import { Rota } from '../rotas/rota.entity';
+import { Pagamento, StatusPagamento } from '../pagamentos/pagamento.entity';
 import { CreatePedidoDto } from './dto/create-pedido.dto';
 import { UpdatePedidoDto } from './dto/update-pedido.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
@@ -11,6 +12,8 @@ import { TrackingGateway } from '../tracking/tracking.gateway';
 
 @Injectable()
 export class PedidosService {
+  private readonly logger = new Logger(PedidosService.name);
+
   constructor(
     @InjectRepository(Pedido)
     private readonly pedidoRepo: Repository<Pedido>,
@@ -18,6 +21,9 @@ export class PedidosService {
     private readonly entregadorRepo: Repository<Entregador>,
     @InjectRepository(Rota)
     private readonly rotaRepo: Repository<Rota>,
+    @InjectRepository(Pagamento)
+    private readonly pagamentoRepo: Repository<Pagamento>,
+    private readonly dataSource: DataSource,
     @Inject(forwardRef(() => TrackingGateway))
     private readonly trackingGateway: TrackingGateway,
   ) {}
@@ -113,6 +119,55 @@ export class PedidosService {
       .where('status IN (:...statuses)', { statuses })
       .execute();
     return { deleted: result.affected || 0 };
+  }
+
+  // Deleta pedidos pendentes criados há mais de 30 minutos sem pagamento aprovado
+  async removerPedidosPendentesExpirados(): Promise<{ deleted: number }> {
+    const trintaMinutosAtras = new Date(Date.now() - 30 * 60 * 1000);
+    
+    // Busca pedidos pendentes criados há mais de 30 minutos
+    const pedidosExpirados = await this.pedidoRepo
+      .createQueryBuilder('pedido')
+      .leftJoinAndSelect('pedido.pagamento', 'pagamento')
+      .where('pedido.status = :status', { status: StatusPedido.PENDENTE })
+      .andWhere('pedido.createdAt < :dataLimite', { dataLimite: trintaMinutosAtras })
+      .andWhere(
+        '(pagamento.id IS NULL OR pagamento.status != :statusAprovado)',
+        { statusAprovado: StatusPagamento.APROVADO }
+      )
+      .getMany();
+
+    if (pedidosExpirados.length === 0) {
+      return { deleted: 0 };
+    }
+
+    // Usa transação para garantir consistência
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // Deleta os pagamentos primeiro (se existirem)
+      const pagamentoIds = pedidosExpirados
+        .map(p => p.pagamento?.id)
+        .filter((id): id is number => id !== undefined);
+      
+      if (pagamentoIds.length > 0) {
+        await queryRunner.manager.delete(Pagamento, pagamentoIds);
+      }
+
+      // Depois deleta os pedidos
+      const pedidoIds = pedidosExpirados.map(p => p.id);
+      await queryRunner.manager.delete(Pedido, pedidoIds);
+      
+      await queryRunner.commitTransaction();
+      return { deleted: pedidosExpirados.length };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async updateLocation(

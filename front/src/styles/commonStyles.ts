@@ -38,7 +38,7 @@ const formStyles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    color: '#333',
+    color: '#666',
   },
   buttons: {
     flexDirection: 'row',
