@@ -250,6 +250,7 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
                   <View style={styles.cepInputContainer}>
                     <TextInput
                       style={[commonStyles.input, styles.cepInput]}
+                      placeholderTextColor="#666"
                       value={cepOrigem}
                       onChangeText={async (text) => {
                         const formatted = formatarCEP(text);
@@ -289,6 +290,7 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
                   <Text style={commonStyles.label}>Número</Text>
                   <TextInput
                     style={[commonStyles.input, styles.numeroInput]}
+                    placeholderTextColor="#666"
                     value={numeroOrigem}
                     onChangeText={(text) => {
                       setNumeroOrigem(text);
@@ -332,6 +334,7 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
                   <View style={styles.cepInputContainer}>
                     <TextInput
                       style={[commonStyles.input, styles.cepInput]}
+                      placeholderTextColor="#666"
                       value={cepDestino}
                       onChangeText={async (text) => {
                         const formatted = formatarCEP(text);
@@ -371,6 +374,7 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
                   <Text style={commonStyles.label}>Número</Text>
                   <TextInput
                     style={[commonStyles.input, styles.numeroInput]}
+                    placeholderTextColor="#666"
                     value={numeroDestino}
                     onChangeText={(text) => {
                       setNumeroDestino(text);
@@ -414,6 +418,7 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
                 </View>
                 <TextInput
                   style={[commonStyles.input, styles.textArea]}
+                  placeholderTextColor="#666"
                   value={formData.descricao}
                   onChangeText={(text) => setFormData({ ...formData, descricao: text })}
                   placeholder="Ex: Entrega de medicamentos, documentos, encomenda..."
@@ -487,12 +492,15 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
 
             {qrCode ? (
               <View style={styles.qrCodeContainer}>
-                {pedidoId && (
-                  <View style={styles.pedidoInfoBox}>
-                    <Text style={styles.pedidoInfoLabel}>Número do Pedido:</Text>
-                    <Text style={styles.pedidoInfoValue}>#{pedidoId}</Text>
+                <View style={styles.pedidoInfoBox}>
+                  <Text style={styles.pedidoInfoLabel}>Número do Pedido:</Text>
+                  <Text style={styles.pedidoInfoValue}>#{pedidoId || '...'}</Text>
+                  <View style={styles.printInfoBox}>
+                    <Text style={styles.printInfoText}>
+                      📸 Tire um print desta tela para gravar o número do pedido
+                    </Text>
                   </View>
-                )}
+                </View>
                 <Text style={styles.qrCodeTitle}>Escaneie o QR Code ou copie o código PIX</Text>
                 
                 {qrCode.startsWith('000201') && !qrCode.includes('br.gov.bcb.pix') ? (

@@ -121,38 +121,6 @@ export class PedidosService {
     return { deleted: result.affected || 0 };
   }
 
-  // Deleta apenas pedidos pendentes criados há mais de 30 minutos que NÃO têm pagamento associado
-  // Se o pedido tem pagamento (mesmo que pendente), não deleta, pois quando pagar o status muda
-  async removerPedidosPendentesExpirados(): Promise<{ deleted: number }> {
-    const trintaMinutosAtras = new Date(Date.now() - 30 * 60 * 1000);
-    
-    // Busca pedidos pendentes criados há mais de 30 minutos que NÃO têm pagamento associado
-    // Usa subquery para garantir que realmente não há pagamento na tabela pagamentos
-    const pedidosExpirados = await this.pedidoRepo
-      .createQueryBuilder('pedido')
-      .where('pedido.status = :status', { status: StatusPedido.PENDENTE })
-      .andWhere('pedido.createdAt < :dataLimite', { dataLimite: trintaMinutosAtras })
-      .andWhere(
-        'NOT EXISTS (SELECT 1 FROM pagamentos WHERE pagamentos.pedidoId = pedido.id)'
-      )
-      .getMany();
-
-    if (pedidosExpirados.length === 0) {
-      return { deleted: 0 };
-    }
-
-    const pedidoIds = pedidosExpirados.map(p => p.id);
-
-    // Deleta apenas os pedidos (não tem pagamentos para deletar)
-    const result = await this.pedidoRepo
-      .createQueryBuilder()
-      .delete()
-      .from(Pedido)
-      .where('id IN (:...ids)', { ids: pedidoIds })
-      .execute();
-
-    return { deleted: result.affected || 0 };
-  }
 
   async updateLocation(
     id: number,

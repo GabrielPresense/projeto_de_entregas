@@ -1,6 +1,8 @@
 import { StatusBar } from 'expo-status-bar';
 import { useState, useEffect } from 'react';
 import { Text, View, TouchableOpacity, ScrollView, BackHandler, Platform } from 'react-native';
+import * as Updates from 'expo-updates';
+import * as Updates from 'expo-updates';
 import { homeStyles } from './src/styles/homeStyles';
 // Tela de seleção de perfil (compartilhada)
 import ProfileSelectionScreen from './src/screens/ProfileSelectionScreen';
@@ -84,6 +86,30 @@ export default function App() {
   const [adminLoggedIn, setAdminLoggedIn] = useState(false); // Estado de autenticação do admin
   const [refreshEntregadores, setRefreshEntregadores] = useState(0); // Para forçar atualização da lista
   const [primeiroLogin, setPrimeiroLogin] = useState(false); // Flag para primeiro login
+
+  // Verifica atualizações do EAS Update ao iniciar o app
+  useEffect(() => {
+    async function checkForUpdates() {
+      if (__DEV__) {
+        // Em desenvolvimento, não verifica atualizações
+        return;
+      }
+
+      try {
+        const update = await Updates.checkForUpdateAsync();
+        if (update.isAvailable) {
+          await Updates.fetchUpdateAsync();
+          // A atualização será aplicada na próxima vez que o app iniciar
+          // Para aplicar imediatamente, pode usar Updates.reloadAsync()
+          // Mas é melhor deixar o usuário decidir quando reiniciar
+        }
+      } catch (error) {
+        console.error('Erro ao verificar atualizações:', error);
+      }
+    }
+
+    checkForUpdates();
+  }, []);
 
   const resetAllStates = () => {
     setSelectedPedido(null);
@@ -589,7 +615,7 @@ export default function App() {
     return (
       <View style={{ flex: 1 }}>
         {renderScreenHeader(`Pedido #${selectedPedido.id}`, true, false)}
-        <PedidoDetailScreen pedidoId={selectedPedido.id} onDelete={handleDeletePedido} onBack={goBack} />
+        <PedidoDetailScreen pedidoId={selectedPedido.id} onBack={goBack} />
       </View>
     );
   }

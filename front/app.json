@@ -28,6 +28,8 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION"
       ],
       "package": "com.gabrielpresense.front",
@@ -41,6 +43,12 @@
         "projectId": "1baa4d4d-56e4-49d7-91fa-f100194e07ef"
       }
     },
-    "owner": "gabrielpresense"
+    "owner": "gabrielpresense",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/1baa4d4d-56e4-49d7-91fa-f100194e07ef"
+    }
   }
 }

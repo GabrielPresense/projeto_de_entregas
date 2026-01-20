@@ -41,6 +41,7 @@ export default function AddressAutocomplete({
             styles.input,
             multiline && styles.inputMultiline,
           ]}
+          placeholderTextColor="#666"
           value={value}
           onChangeText={handleChangeText}
           placeholder={placeholder}

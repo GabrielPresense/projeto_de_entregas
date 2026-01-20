@@ -40,6 +40,9 @@ const formStyles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
   },
+  inputPlaceholder: {
+    color: '#666',
+  },
   buttons: {
     flexDirection: 'row',
     justifyContent: 'space-between',

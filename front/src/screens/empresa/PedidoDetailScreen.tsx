@@ -423,21 +423,7 @@ export default function PedidoDetailScreen({
           </View>
         )}
 
-        {onDelete && (
-          <View style={pedidoDetailStyles.actions}>
-            <TouchableOpacity
-              style={[pedidoDetailStyles.actionButton, pedidoDetailStyles.deleteButton]}
-              onPress={handleDelete}
-              disabled={deleting}
-            >
-              {deleting ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={pedidoDetailStyles.actionButtonText}>Deletar</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        )}
+        {/* Botão de deletar removido - pedidos pendentes são removidos automaticamente pelo scheduler */}
       </View>
 
       {/* Modal para selecionar entregador */}
