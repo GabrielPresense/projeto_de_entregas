@@ -141,24 +141,34 @@ export class PedidosService {
       return { deleted: 0 };
     }
 
+    const pedidoIds = pedidosExpirados.map(p => p.id);
+    const pagamentoIds = pedidosExpirados
+      .map(p => p.pagamento?.id)
+      .filter((id): id is number => id !== undefined);
+
     // Usa transação para garantir consistência
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      // Deleta os pagamentos primeiro (se existirem)
-      const pagamentoIds = pedidosExpirados
-        .map(p => p.pagamento?.id)
-        .filter((id): id is number => id !== undefined);
-      
+      // Deleta os pagamentos primeiro usando query builder (se existirem)
       if (pagamentoIds.length > 0) {
-        await queryRunner.manager.delete(Pagamento, pagamentoIds);
+        await queryRunner.manager
+          .createQueryBuilder()
+          .delete()
+          .from(Pagamento)
+          .where('id IN (:...ids)', { ids: pagamentoIds })
+          .execute();
       }
 
-      // Depois deleta os pedidos
-      const pedidoIds = pedidosExpirados.map(p => p.id);
-      await queryRunner.manager.delete(Pedido, pedidoIds);
+      // Depois deleta os pedidos usando query builder
+      await queryRunner.manager
+        .createQueryBuilder()
+        .delete()
+        .from(Pedido)
+        .where('id IN (:...ids)', { ids: pedidoIds })
+        .execute();
       
       await queryRunner.commitTransaction();
       return { deleted: pedidosExpirados.length };
