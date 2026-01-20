@@ -24,7 +24,6 @@ export default function PedidosListScreen({ onSelectPedido }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filtroStatus, setFiltroStatus] = useState<FiltroStatus>('todos');
-  const [deleting, setDeleting] = useState(false);
 
   // Busca os pedidos quando a tela carrega
   useEffect(() => {
@@ -82,55 +81,6 @@ export default function PedidosListScreen({ onSelectPedido }: Props) {
   const pedidosFiltrados = filtroStatus === 'todos'
     ? pedidos
     : pedidos.filter((pedido) => pedido.status === filtroStatus);
-
-  // Conta quantos pedidos pendentes e em trânsito existem
-  const pedidosParaDeletar = pedidos.filter(
-    (p) => p.status === StatusPedido.PENDENTE || p.status === StatusPedido.EM_TRANSITO
-  ).length;
-
-  // Função para deletar pedidos pendentes e em trânsito
-  const handleDeletePendentesETransito = () => {
-    if (pedidosParaDeletar === 0) {
-      Alert.alert('Aviso', 'Não há pedidos pendentes ou em trânsito para deletar.');
-      return;
-    }
-
-    Alert.alert(
-      'Confirmar Exclusão',
-      `Tem certeza que deseja deletar ${pedidosParaDeletar} pedido(s) pendente(s) e em trânsito? Esta ação não pode ser desfeita.`,
-      [
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
-        {
-          text: 'Deletar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setDeleting(true);
-              const result = await pedidosService.deleteByStatus([
-                StatusPedido.PENDENTE,
-                StatusPedido.EM_TRANSITO,
-              ]);
-              Alert.alert(
-                'Sucesso',
-                `${result.deleted} pedido(s) deletado(s) com sucesso.`
-              );
-              // Recarrega a lista
-              await loadPedidos();
-            } catch (err) {
-              const errorMessage =
-                err instanceof Error ? err.message : 'Erro ao deletar pedidos';
-              Alert.alert('Erro', errorMessage);
-            } finally {
-              setDeleting(false);
-            }
-          },
-        },
-      ]
-    );
-  };
 
   // Renderiza cada item da lista
   const renderItem = ({ item }: { item: Pedido }) => {
@@ -225,28 +175,6 @@ export default function PedidosListScreen({ onSelectPedido }: Props) {
 
   return (
     <View style={pedidosListStyles.container}>
-      {/* Botão para deletar pedidos pendentes e em trânsito */}
-      {pedidosParaDeletar > 0 && (
-        <View style={pedidosListStyles.deleteButtonContainer}>
-          <TouchableOpacity
-            style={[
-              pedidosListStyles.deleteButton,
-              deleting && pedidosListStyles.deleteButtonDisabled,
-            ]}
-            onPress={handleDeletePendentesETransito}
-            disabled={deleting}
-          >
-            {deleting ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <Text style={pedidosListStyles.deleteButtonText}>
-                Deletar {pedidosParaDeletar} pedido(s) pendente(s) e em trânsito
-              </Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      )}
-
       {/* Filtros de Status */}
       <View style={pedidosListStyles.filtersContainer}>
         <TouchableOpacity
