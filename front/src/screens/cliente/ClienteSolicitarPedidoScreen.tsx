@@ -48,6 +48,7 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
   const [pagamentoId, setPagamentoId] = useState<number | null>(null);
   const [pedidoId, setPedidoId] = useState<number | null>(null);
   const [isTestMode, setIsTestMode] = useState(false);
+  const [metodoPagamentoSelecionado, setMetodoPagamentoSelecionado] = useState<MetodoPagamento | null>(null);
   const [origemCoords, setOrigemCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [destinoCoords, setDestinoCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [cepOrigem, setCepOrigem] = useState('');
@@ -173,6 +174,11 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
   };
 
   const handlePaymentConfirm = async () => {
+    if (!metodoPagamentoSelecionado) {
+      Alert.alert('Atenção', 'Selecione uma forma de pagamento');
+      return;
+    }
+
     setPaymentConfirmed(true);
 
     try {
@@ -187,37 +193,38 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
 
       setPedidoId(pedido.id);
 
-      // 2. Cria o pagamento PIX
+      // 2. Cria o pagamento
       const pagamento = await pagamentosService.create({
         valor: calculatedValue!.toFixed(2),
-        metodoPagamento: MetodoPagamento.PIX,
+        metodoPagamento: metodoPagamentoSelecionado,
         pedidoId: pedido.id,
       });
 
       setPagamentoId(pagamento.id);
 
-      // 3. Processa o pagamento para gerar QR Code
-      const pagamentoProcessado = await pagamentosService.processar(pagamento.id);
-      
-      if (pagamentoProcessado.qrCode) {
-        setQrCode(pagamentoProcessado.qrCode);
+      // 3. Se for PIX, processa para gerar QR Code
+      if (metodoPagamentoSelecionado === MetodoPagamento.PIX) {
+        const pagamentoProcessado = await pagamentosService.processar(pagamento.id);
         
-        // Detecta se está em modo de teste (QR Code simulado ou transacaoId mock)
-        // Se o transacaoId começa com "mock-" ou o QR Code não contém "br.gov.bcb.pix", é modo de teste
-        const transacaoIdStr = pagamentoProcessado.transacaoId ? String(pagamentoProcessado.transacaoId) : '';
-        const qrCodeStr = pagamentoProcessado.qrCode ? String(pagamentoProcessado.qrCode) : '';
-        
-        const isTest = transacaoIdStr.startsWith('mock-') || 
-                       (qrCodeStr.startsWith('000201') && 
-                        !qrCodeStr.includes('br.gov.bcb.pix'));
-        setIsTestMode(isTest);
-        
-        if (isTest) {
-          console.log('Modo de teste detectado - Pagamento será aprovado automaticamente ao clicar em "Simular Pagamento"');
+        if (pagamentoProcessado.qrCode) {
+          setQrCode(pagamentoProcessado.qrCode);
+          
+          // Detecta se está em modo de teste
+          const transacaoIdStr = pagamentoProcessado.transacaoId ? String(pagamentoProcessado.transacaoId) : '';
+          const qrCodeStr = pagamentoProcessado.qrCode ? String(pagamentoProcessado.qrCode) : '';
+          
+          const isTest = transacaoIdStr.startsWith('mock-') || 
+                         (qrCodeStr.startsWith('000201') && 
+                          !qrCodeStr.includes('br.gov.bcb.pix'));
+          setIsTestMode(isTest);
+        } else {
+          Alert.alert('Aviso', 'QR Code não foi gerado. Tente novamente.');
+          setPaymentConfirmed(false);
         }
-      } else {
-        Alert.alert('Aviso', 'QR Code não foi gerado. Tente novamente.');
-        setPaymentConfirmed(false);
+      } else if (metodoPagamentoSelecionado === MetodoPagamento.DINHEIRO) {
+        // Para dinheiro, não precisa processar, apenas marca como confirmado
+        // O pagamento será confirmado quando o entregador receber
+        setQrCode(null); // Não tem QR Code para dinheiro
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro ao processar pagamento';
@@ -466,8 +473,14 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
         ) : (
           <View style={styles.paymentContainer}>
             <View style={styles.headerSection}>
-              <Text style={styles.stepTitle}> Pagamento PIX</Text>
-              <Text style={styles.stepSubtitle}>Escaneie o QR Code para pagar</Text>
+              <Text style={styles.stepTitle}>
+                {metodoPagamentoSelecionado === MetodoPagamento.PIX ? 'Pagamento PIX' : 'Pagamento em Dinheiro'}
+              </Text>
+              <Text style={styles.stepSubtitle}>
+                {metodoPagamentoSelecionado === MetodoPagamento.PIX 
+                  ? 'Escaneie o QR Code para pagar' 
+                  : 'Pagamento será realizado na entrega'}
+              </Text>
             </View>
 
             <View style={styles.paymentSummary}>
@@ -490,7 +503,40 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
               </View>
             </View>
 
-            {qrCode ? (
+            {metodoPagamentoSelecionado === MetodoPagamento.DINHEIRO && paymentConfirmed ? (
+              <View style={styles.qrCodeContainer}>
+                <View style={styles.cashPaymentContainer}>
+                  <Text style={styles.cashIcon}>💵</Text>
+                  <Text style={styles.cashTitle}>Pagamento em Dinheiro Confirmado</Text>
+                  <Text style={styles.cashSubtitle}>
+                    Seu pedido foi criado com sucesso!
+                  </Text>
+                  
+                  <View style={styles.cashValueBox}>
+                    <Text style={styles.cashValueLabel}>Valor a ser pago:</Text>
+                    <Text style={styles.cashValueAmount}>
+                      R$ {calculatedValue ? formatCurrency(calculatedValue) : '0,00'}
+                    </Text>
+                  </View>
+                  
+                  <View style={styles.cashInfoBox}>
+                    <Text style={styles.cashInfoText}>
+                      📋 O pagamento será realizado em dinheiro quando o entregador chegar ao destino.{'\n\n'}
+                      💡 Mantenha o valor exato ou próximo para facilitar o troco.
+                    </Text>
+                  </View>
+                  
+                  <TouchableOpacity
+                    style={styles.finishButton}
+                    onPress={() => {
+                      onSuccess?.(pedidoId!);
+                    }}
+                  >
+                    <Text style={styles.finishButtonText}>Entendido</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : qrCode ? (
               <View style={styles.qrCodeContainer}>
                 <Text style={styles.qrCodeTitle}>Escaneie o QR Code ou copie o código PIX</Text>
                 
@@ -632,18 +678,50 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
               </View>
             ) : (
               <View style={styles.paymentMethods}>
-                <View style={styles.pixMethodContainer}>
-                  <Text style={styles.pixIcon}>📱</Text>
+                <Text style={styles.paymentMethodTitle}>Selecione a forma de pagamento:</Text>
+                
+                <TouchableOpacity
+                  style={[
+                    styles.pixMethodContainer,
+                    metodoPagamentoSelecionado === MetodoPagamento.PIX && styles.methodSelected,
+                  ]}
+                  onPress={() => setMetodoPagamentoSelecionado(MetodoPagamento.PIX)}
+                  disabled={loading || paymentConfirmed}
+                >
                   <Text style={styles.pixLabel}>PIX</Text>
                   <Text style={styles.pixDescription}>
                     Pagamento instantâneo via PIX
                   </Text>
-                </View>
+                  {metodoPagamentoSelecionado === MetodoPagamento.PIX && (
+                    <Text style={styles.selectedIndicator}>✓ Selecionado</Text>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.pixMethodContainer,
+                    metodoPagamentoSelecionado === MetodoPagamento.DINHEIRO && styles.methodSelected,
+                    { marginTop: 15 },
+                  ]}
+                  onPress={() => setMetodoPagamentoSelecionado(MetodoPagamento.DINHEIRO)}
+                  disabled={loading || paymentConfirmed}
+                >
+                  <Text style={styles.pixLabel}>Dinheiro</Text>
+                  <Text style={styles.pixDescription}>
+                    Pagamento em dinheiro na entrega
+                  </Text>
+                  {metodoPagamentoSelecionado === MetodoPagamento.DINHEIRO && (
+                    <Text style={styles.selectedIndicator}>✓ Selecionado</Text>
+                  )}
+                </TouchableOpacity>
 
                 <View style={[commonStyles.buttons, { padding: 20, paddingTop: 0 }]}>
                   <TouchableOpacity
                     style={[commonStyles.formButton, commonStyles.cancelButton]}
-                    onPress={() => setStep('form')}
+                    onPress={() => {
+                      setStep('form');
+                      setMetodoPagamentoSelecionado(null);
+                    }}
                     disabled={loading}
                   >
                     <Text style={commonStyles.cancelButtonText}>Voltar</Text>
@@ -652,16 +730,19 @@ export default function ClienteSolicitarPedidoScreen({ onSuccess, onCancel }: Pr
                     style={[
                       commonStyles.formButton,
                       commonStyles.saveButton,
-                      loading && styles.buttonDisabled,
+                      (!metodoPagamentoSelecionado || loading || paymentConfirmed) && styles.buttonDisabled,
                     ]}
                     onPress={handlePaymentConfirm}
-                    disabled={loading || paymentConfirmed}
+                    disabled={loading || paymentConfirmed || !metodoPagamentoSelecionado}
                   >
                     {loading ? (
                       <ActivityIndicator color="#fff" />
                     ) : (
                       <Text style={commonStyles.saveButtonText}>
-                        {paymentConfirmed ? 'Gerando QR Code...' : 'Gerar QR Code PIX'}
+                        {paymentConfirmed 
+                          ? (metodoPagamentoSelecionado === MetodoPagamento.PIX ? 'Gerando QR Code...' : 'Confirmando...')
+                          : (metodoPagamentoSelecionado === MetodoPagamento.PIX ? 'Gerar QR Code PIX' : 'Confirmar Pagamento em Dinheiro')
+                        }
                       </Text>
                     )}
                   </TouchableOpacity>

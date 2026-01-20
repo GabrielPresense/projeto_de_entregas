@@ -15,6 +15,7 @@ export enum MetodoPagamento {
   CARTAO_DEBITO = 'cartao_debito',
   PIX = 'pix',
   BOLETO = 'boleto',
+  DINHEIRO = 'dinheiro',
 }
 
 // Tipo completo de um Pagamento
