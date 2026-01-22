@@ -6,9 +6,10 @@ import { veiculosListStyles } from '../../styles/veiculoStyles';
 
 interface Props {
   onSelectVeiculo?: (veiculo: Veiculo) => void;
+  onAddVeiculo?: () => void;
 }
 
-export default function VeiculosListScreen({ onSelectVeiculo }: Props) {
+export default function VeiculosListScreen({ onSelectVeiculo, onAddVeiculo }: Props) {
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -91,16 +92,36 @@ export default function VeiculosListScreen({ onSelectVeiculo }: Props) {
     );
   }
 
-  if (veiculos.length === 0) {
-    return (
-      <View style={veiculosListStyles.emptyContainer}>
-        <Text style={veiculosListStyles.emptyText}>Nenhum veículo cadastrado ainda</Text>
-      </View>
-    );
-  }
-
   return (
-    <FlatList data={veiculos} renderItem={renderItem} keyExtractor={(item) => item.id.toString()} contentContainerStyle={veiculosListStyles.list} refreshing={loading} onRefresh={loadVeiculos} />
+    <View style={veiculosListStyles.container}>
+      {onAddVeiculo && (
+        <View style={veiculosListStyles.refreshHeader}>
+          <TouchableOpacity
+            style={veiculosListStyles.refreshButton}
+            onPress={onAddVeiculo}
+          >
+            <Text style={veiculosListStyles.refreshButtonText}>
+              + Adicionar Veículo
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {veiculos.length === 0 ? (
+        <View style={veiculosListStyles.emptyContainer}>
+          <Text style={veiculosListStyles.emptyText}>Nenhum veículo cadastrado ainda</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={veiculos}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={veiculosListStyles.list}
+          refreshing={loading}
+          onRefresh={loadVeiculos}
+        />
+      )}
+    </View>
   );
 }
 

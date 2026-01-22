@@ -19,7 +19,7 @@ export const pagamentosService = {
     await api.delete(`/pagamentos/${id}`);
   },
   // Processa o pagamento (gera QR Code para PIX)
-  processar: async (id: number, emailPagador?: string): Promise<Pagamento> => {
+    processar: async (id: number, emailPagador?: string): Promise<Pagamento> => {
     return await api.post<Pagamento>(`/pagamentos/${id}/processar`, {
       emailPagador: emailPagador || undefined,
     });

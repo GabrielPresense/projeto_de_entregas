@@ -650,7 +650,7 @@ export default function App() {
       return (
         <View style={{ flex: 1 }}>
           {renderScreenHeader('Veículos', true)}
-          <VeiculosListScreen onSelectVeiculo={handleSelectVeiculo} />
+          <VeiculosListScreen onSelectVeiculo={handleSelectVeiculo} onAddVeiculo={openNewVeiculo} />
         </View>
       );
     }
