@@ -35,7 +35,6 @@ import RotaFormScreen from './src/screens/empresa/RotaFormScreen';
 import RotaDetailScreen from './src/screens/empresa/RotaDetailScreen';
 import TrackingScreen from './src/screens/empresa/TrackingScreen';
 import DashboardStats from './src/components/DashboardStats';
-import TotalHoje from './src/components/TotalHoje';
 import { Pedido } from './src/types/pedido.types';
 import { Entregador } from './src/types/entregador.types';
 import { Veiculo } from './src/types/veiculo.types';
@@ -722,8 +721,6 @@ export default function App() {
             <Text style={{ color: '#110975', fontSize: 14, fontWeight: '600' }}>Sair</Text>
           </TouchableOpacity>
         </View>
-
-        <TotalHoje />
 
         <View style={homeStyles.buttonsContainer}>
           <TouchableOpacity style={homeStyles.button} onPress={openNewPedido}>

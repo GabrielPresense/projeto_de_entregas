@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  ScrollView,
 } from 'react-native';
 import { pedidosService } from '../../services/pedidos.service';
 import { Pedido, StatusPedido } from '../../types/pedido.types';
@@ -176,7 +177,12 @@ export default function PedidosListScreen({ onSelectPedido }: Props) {
   return (
     <View style={pedidosListStyles.container}>
       {/* Filtros de Status */}
-      <View style={pedidosListStyles.filtersContainer}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={pedidosListStyles.filtersContainer}
+        contentContainerStyle={{ paddingHorizontal: 16, gap: 8, alignItems: 'center', paddingVertical: 0, height: 36 }}
+      >
         <TouchableOpacity
           style={[
             pedidosListStyles.filterButton,
@@ -257,7 +263,7 @@ export default function PedidosListScreen({ onSelectPedido }: Props) {
             Entregue
           </Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
 
       {pedidosFiltrados.length === 0 ? (
         <View style={pedidosListStyles.center}>

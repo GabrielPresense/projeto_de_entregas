@@ -94,17 +94,16 @@ export const pedidoStyles = StyleSheet.create({
   },
   // Estilos para filtros de status
   filtersContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 8,
     backgroundColor: '#fff',
     borderTopWidth: 0,
     marginTop: -1, // Remove a linha do header acima
+    paddingVertical: 12, // Padding vertical fixo no container
+    height: 60, // Altura fixa: 12 (top) + 36 (botão) + 12 (bottom) = 60
+    minHeight: 60, // Garante altura mínima
+    maxHeight: 60, // Garante altura máxima
   },
   filterButton: {
-    flex: 1, // Todos os botões ocupam o mesmo espaço
-    paddingHorizontal: 8,
+    paddingHorizontal: 16,
     paddingVertical: 0,
     borderRadius: 20,
     backgroundColor: 'transparent',
@@ -112,14 +111,14 @@ export const pedidoStyles = StyleSheet.create({
     borderColor: '#1a5f1a',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 36, // Altura fixa para todos
+    height: 36,
     overflow: 'hidden',
     flexDirection: 'row',
     marginVertical: 0,
+    minWidth: 100,
   },
   filterButtonActive: {
-    flex: 1, // Mantém o mesmo espaço
-    paddingHorizontal: 8,
+    paddingHorizontal: 16,
     paddingVertical: 0,
     borderRadius: 20,
     backgroundColor: '#1a5f1a',
@@ -127,10 +126,11 @@ export const pedidoStyles = StyleSheet.create({
     borderColor: '#1a5f1a',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 36, // Mesma altura
+    height: 36,
     overflow: 'hidden',
     flexDirection: 'row',
     marginVertical: 0,
+    minWidth: 100,
   },
   filterButtonText: {
     fontSize: 13,

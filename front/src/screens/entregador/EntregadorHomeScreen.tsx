@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import { entregadorHomeStyles as styles } from '../../styles/entregadorHomeStyles';
 import { pedidosService } from '../../services/pedidos.service';
 import { Pedido, StatusPedido } from '../../types/pedido.types';
@@ -182,7 +182,12 @@ export default function EntregadorHomeScreen({ entregadorId, onSelectPedido, sho
       )}
       
       {/* Filtros de Status */}
-      <View style={pedidosListStyles.filtersContainer}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={[pedidosListStyles.filtersContainer, { backgroundColor: 'transparent' }]}
+        contentContainerStyle={{ paddingHorizontal: 16, gap: 8, alignItems: 'center', paddingVertical: 0, height: 36 }}
+      >
         <TouchableOpacity
           style={[
             pedidosListStyles.filterButton,
@@ -231,7 +236,7 @@ export default function EntregadorHomeScreen({ entregadorId, onSelectPedido, sho
             Entregues
           </Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
 
       {pedidosFiltrados.length === 0 ? (
         <View style={commonStyles.center}>
