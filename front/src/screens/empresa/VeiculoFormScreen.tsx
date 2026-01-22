@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { veiculosService } from '../../services/veiculos.service';
 import { Veiculo, CreateVeiculoDto, UpdateVeiculoDto, TipoVeiculo } from '../../types/veiculo.types';
 import { veiculoFormStyles } from '../../styles/veiculoStyles';
@@ -66,8 +66,17 @@ export default function VeiculoFormScreen({ veiculo, onSave, onCancel }: Props) 
   ];
 
   return (
-    <ScrollView style={veiculoFormStyles.container}>
-      <View style={veiculoFormStyles.form}>
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }} 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
+      <ScrollView 
+        style={veiculoFormStyles.container}
+        contentContainerStyle={{ paddingBottom: 20 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={veiculoFormStyles.form}>
         <View style={veiculoFormStyles.field}>
           <Text style={veiculoFormStyles.label}>Placa *</Text>
           <TextInput 
@@ -126,7 +135,8 @@ export default function VeiculoFormScreen({ veiculo, onSave, onCancel }: Props) 
           </TouchableOpacity>
         </View>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
