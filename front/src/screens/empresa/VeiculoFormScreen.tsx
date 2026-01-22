@@ -70,7 +70,16 @@ export default function VeiculoFormScreen({ veiculo, onSave, onCancel }: Props) 
       <View style={veiculoFormStyles.form}>
         <View style={veiculoFormStyles.field}>
           <Text style={veiculoFormStyles.label}>Placa *</Text>
-          <TextInput style={veiculoFormStyles.input} value={formData.placa} onChangeText={(text) => setFormData({ ...formData, placa: text.toUpperCase() })} placeholder="Ex: ABC1234" maxLength={7} />
+          <TextInput 
+            style={veiculoFormStyles.input} 
+            value={formData.placa} 
+            onChangeText={(text) => setFormData({ ...formData, placa: text.toUpperCase() })} 
+            placeholder="Ex: ABC1234" 
+            maxLength={7}
+            autoCorrect={false}
+            autoCapitalize="characters"
+            autoComplete="off"
+          />
         </View>
         <View style={veiculoFormStyles.field}>
           <Text style={veiculoFormStyles.label}>Marca *</Text>
