@@ -17,7 +17,7 @@ interface Props {
   onSelectPedido?: (pedido: Pedido) => void;
 }
 
-type FiltroStatus = 'todos' | StatusPedido.CONFIRMADO | StatusPedido.PENDENTE | StatusPedido.EM_TRANSITO;
+type FiltroStatus = 'todos' | StatusPedido.CONFIRMADO | StatusPedido.PENDENTE | StatusPedido.EM_TRANSITO | StatusPedido.ENTREGUE;
 
 export default function PedidosListScreen({ onSelectPedido }: Props) {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
@@ -239,6 +239,22 @@ export default function PedidosListScreen({ onSelectPedido }: Props) {
             ]}
           >
             Em Trânsito
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            pedidosListStyles.filterButton,
+            filtroStatus === StatusPedido.ENTREGUE && pedidosListStyles.filterButtonActive,
+          ]}
+          onPress={() => setFiltroStatus(StatusPedido.ENTREGUE)}
+        >
+          <Text
+            style={[
+              pedidosListStyles.filterButtonText,
+              filtroStatus === StatusPedido.ENTREGUE && pedidosListStyles.filterButtonTextActive,
+            ]}
+          >
+            Entregue
           </Text>
         </TouchableOpacity>
       </View>

@@ -4,6 +4,7 @@ import { entregadorHomeStyles as styles } from '../../styles/entregadorHomeStyle
 import { pedidosService } from '../../services/pedidos.service';
 import { Pedido, StatusPedido } from '../../types/pedido.types';
 import { commonStyles } from '../../styles/commonStyles';
+import { pedidosListStyles } from '../../styles/pedidoStyles';
 
 interface Props {
   entregadorId: number; // ID do entregador logado
@@ -11,10 +12,13 @@ interface Props {
   showHeader?: boolean; // Se deve mostrar o cabeçalho interno
 }
 
+type FiltroEntregador = 'todos' | 'em_entrega' | 'entregues';
+
 export default function EntregadorHomeScreen({ entregadorId, onSelectPedido, showHeader = true }: Props) {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filtroStatus, setFiltroStatus] = useState<FiltroEntregador>('todos');
 
   useEffect(() => {
     loadPedidos();
@@ -74,6 +78,24 @@ export default function EntregadorHomeScreen({ entregadorId, onSelectPedido, sho
     const num = parseFloat(valor);
     return `R$ ${num.toFixed(2).replace('.', ',')}`;
   };
+
+  // Filtra os pedidos baseado no filtro selecionado
+  const pedidosFiltrados = (() => {
+    if (filtroStatus === 'todos') {
+      return pedidos;
+    } else if (filtroStatus === 'em_entrega') {
+      // Pedidos que precisam ser entregues (em trânsito ou pronto para entrega)
+      return pedidos.filter(
+        (pedido) =>
+          pedido.status === StatusPedido.EM_TRANSITO ||
+          pedido.status === StatusPedido.PRONTO_PARA_ENTREGA
+      );
+    } else if (filtroStatus === 'entregues') {
+      // Pedidos já entregues
+      return pedidos.filter((pedido) => pedido.status === StatusPedido.ENTREGUE);
+    }
+    return pedidos;
+  })();
 
   const renderItem = ({ item }: { item: Pedido }) => {
     if (!item || !item.id) return null;
@@ -158,14 +180,79 @@ export default function EntregadorHomeScreen({ entregadorId, onSelectPedido, sho
           <Text style={styles.headerSubtitle}>{pedidos.length} entrega(s) atribuída(s)</Text>
         </View>
       )}
-      <FlatList
-        data={pedidos}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={commonStyles.list}
-        refreshing={loading}
-        onRefresh={loadPedidos}
-      />
+      
+      {/* Filtros de Status */}
+      <View style={pedidosListStyles.filtersContainer}>
+        <TouchableOpacity
+          style={[
+            pedidosListStyles.filterButton,
+            filtroStatus === 'todos' && pedidosListStyles.filterButtonActive,
+          ]}
+          onPress={() => setFiltroStatus('todos')}
+        >
+          <Text
+            style={[
+              pedidosListStyles.filterButtonText,
+              filtroStatus === 'todos' && pedidosListStyles.filterButtonTextActive,
+            ]}
+          >
+            Todos
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            pedidosListStyles.filterButton,
+            filtroStatus === 'em_entrega' && pedidosListStyles.filterButtonActive,
+          ]}
+          onPress={() => setFiltroStatus('em_entrega')}
+        >
+          <Text
+            style={[
+              pedidosListStyles.filterButtonText,
+              filtroStatus === 'em_entrega' && pedidosListStyles.filterButtonTextActive,
+            ]}
+          >
+            Em Entrega
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            pedidosListStyles.filterButton,
+            filtroStatus === 'entregues' && pedidosListStyles.filterButtonActive,
+          ]}
+          onPress={() => setFiltroStatus('entregues')}
+        >
+          <Text
+            style={[
+              pedidosListStyles.filterButtonText,
+              filtroStatus === 'entregues' && pedidosListStyles.filterButtonTextActive,
+            ]}
+          >
+            Entregues
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {pedidosFiltrados.length === 0 ? (
+        <View style={commonStyles.center}>
+          <Text style={commonStyles.emptyText}>
+            {filtroStatus === 'todos'
+              ? 'Você não tem entregas no momento'
+              : filtroStatus === 'em_entrega'
+              ? 'Nenhuma entrega em andamento'
+              : 'Nenhuma entrega concluída'}
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={pedidosFiltrados}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={commonStyles.list}
+          refreshing={loading}
+          onRefresh={loadPedidos}
+        />
+      )}
     </View>
   );
 }
